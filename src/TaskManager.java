@@ -1,7 +1,5 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
@@ -10,18 +8,27 @@ public class TaskManager {
     private int idCounter = 0;
 
     public Task createTask(Task task) {
+        if (tasks.containsKey(task.getId())) {
+            throw new IllegalArgumentException("Задача с таким ID уже существует.");
+        }
         task.setId(++idCounter);
         tasks.put(task.getId(), task);
         return task;
     }
 
     public Epic createEpic(Epic epic) {
+        if (epics.containsKey(epic.getId())) {
+            throw new IllegalArgumentException("Эпик с таким ID уже существует.");
+        }
         epic.setId(++idCounter);
         epics.put(epic.getId(), epic);
         return epic;
     }
 
     public SubTask createSubTask(SubTask subtask) {
+        if (subtasks.containsKey(subtask.getId())) {
+            throw new IllegalArgumentException("Подзадача с таким ID уже существует.");
+        }
         if (!epics.containsKey(subtask.getEpicId())) {
             throw new IllegalArgumentException("Эпик с ID " + subtask.getEpicId() + " не найден.");
         }
@@ -70,5 +77,4 @@ public class TaskManager {
                 .sorted(Comparator.comparing(SubTask::getStatus))
                 .collect(Collectors.toList());
     }
-}
 }
