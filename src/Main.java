@@ -5,24 +5,50 @@ public class Main {
         TaskManager manager = new TaskManager();
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Введите название задачи:");
-        String taskTitle = scanner.nextLine();
-        if (taskTitle == null || taskTitle.isEmpty()) {
-            throw new IllegalArgumentException("Название задачи не может быть пустым.");
-        }
+        String taskTitle;
+        do {
+            System.out.println("Введите название задачи:");
+            taskTitle = scanner.nextLine();
+            if (taskTitle == null || taskTitle.isEmpty()) {
+                System.out.println("Название задачи не может быть пустым. Попробуйте снова.");
+            }
+        } while (taskTitle == null || taskTitle.isEmpty());
 
-        System.out.println("Введите описание задачи:");
-        String taskDescription = scanner.nextLine();
-        if (taskDescription == null || taskDescription.isEmpty()) {
-            throw new IllegalArgumentException("Описание задачи не может быть пустым.");
-        }
+        String taskDescription;
+        do {
+            System.out.println("Введите описание задачи:");
+            taskDescription = scanner.nextLine();
+            if (taskDescription == null || taskDescription.isEmpty()) {
+                System.out.println("Описание задачи не может быть пустым. Попробуйте снова.");
+            }
+        } while (taskDescription == null || taskDescription.isEmpty());
 
         Task task1 = new Task(0, taskTitle, taskDescription, TaskStatus.NEW);
         manager.createTask(task1);
 
-        Epic epic1 = new Epic(0, "Организация праздника", "Организовать день рождения");
+        String epicTitle;
+        String epicDescription;
+
+        do {
+            System.out.println("Введите название эпика:");
+            epicTitle = scanner.nextLine();
+            if (epicTitle == null || epicTitle.isEmpty()) {
+                System.out.println("Название эпика не может быть пустым. Попробуйте снова.");
+            }
+        } while (epicTitle == null || epicTitle.isEmpty());
+
+        do {
+            System.out.println("Введите описание эпика:");
+            epicDescription = scanner.nextLine();
+            if (epicDescription == null || epicDescription.isEmpty()) {
+                System.out.println("Описание эпика не может быть пустым. Попробуйте снова.");
+            }
+        } while (epicDescription == null || epicDescription.isEmpty());
+
+        Epic epic1 = new Epic(0, epicTitle, epicDescription);
         manager.createEpic(epic1);
 
+        // Ввод подзадач
         SubTask subtask1 = new SubTask(0, "Забронировать ресторан", "Найти и забронировать ресторан", TaskStatus.NEW, epic1.getId());
         SubTask subtask2 = new SubTask(0, "Отправить приглашения", "Разослать пригласительные", TaskStatus.NEW, epic1.getId());
 
