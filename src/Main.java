@@ -3,82 +3,20 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         TaskManager manager = new TaskManager();
-        Scanner scanner = new Scanner(System.in);
-
-        String taskTitle;
-        do {
-            System.out.println("Введите название задачи:");
-            taskTitle = scanner.nextLine();
-            if (taskTitle == null || taskTitle.isEmpty()) {
-                System.out.println("Название задачи не может быть пустым. Попробуйте снова.");
-            }
-        } while (taskTitle == null || taskTitle.isEmpty());
-
-        String taskDescription;
-        do {
-            System.out.println("Введите описание задачи:");
-            taskDescription = scanner.nextLine();
-            if (taskDescription == null || taskDescription.isEmpty()) {
-                System.out.println("Описание задачи не может быть пустым. Попробуйте снова.");
-            }
-        } while (taskDescription == null || taskDescription.isEmpty());
-
-        Task task1 = new Task(0, taskTitle, taskDescription, TaskStatus.NEW);
-        manager.createTask(task1);
-
-        String epicTitle;
-        String epicDescription;
-
-        do {
-            System.out.println("Введите название эпика:");
-            epicTitle = scanner.nextLine();
-            if (epicTitle == null || epicTitle.isEmpty()) {
-                System.out.println("Название эпика не может быть пустым. Попробуйте снова.");
-            }
-        } while (epicTitle == null || epicTitle.isEmpty());
-
-        do {
-            System.out.println("Введите описание эпика:");
-            epicDescription = scanner.nextLine();
-            if (epicDescription == null || epicDescription.isEmpty()) {
-                System.out.println("Описание эпика не может быть пустым. Попробуйте снова.");
-            }
-        } while (epicDescription == null || epicDescription.isEmpty());
-
-        Epic epic1 = new Epic(0, epicTitle, epicDescription);
+        Epic epic1 = new Epic(1, "", "");
+        Epic epic2 = new Epic(2, "", "");
+        SubTask subTask1_1 = new SubTask(1, "", "", TaskStatus.NEW, epic1.getId());
+        SubTask subTask1_2 = new SubTask(2, "", "", TaskStatus.NEW, epic1.getId());
+        SubTask subTask2_1 = new SubTask(3, "", "", TaskStatus.NEW, epic2.getId());
         manager.createEpic(epic1);
-
-        // Ввод подзадач
-        SubTask subtask1 = new SubTask(0, "Забронировать ресторан", "Найти и забронировать ресторан", TaskStatus.NEW, epic1.getId());
-        SubTask subtask2 = new SubTask(0, "Отправить приглашения", "Разослать пригласительные", TaskStatus.NEW, epic1.getId());
-
-        manager.createSubTask(subtask1);
-        manager.createSubTask(subtask2);
-
-        // Вывод списка задач и эпиков
-        System.out.println("Список задач:");
-        System.out.println(manager.getAllTasks());
-
-        System.out.println("Список эпиков:");
+        manager.createEpic(epic2);
+        manager.createSubTask(subTask1_1);
+        manager.createSubTask(subTask1_2);
+        manager.createSubTask(subTask2_1);
         System.out.println(manager.getAllEpics());
+        subTask2_1.setStatus(TaskStatus.DONE);
+        manager.updateSubTask(subTask2_1);
+        System.out.println(epic2.getStatus());
 
-        // Изменение статусов
-        subtask1.setStatus(TaskStatus.DONE);
-        subtask2.setStatus(TaskStatus.DONE);
-        epic1.updateStatus();
-
-        // Проверка статуса
-        System.out.println("Эпик после выполнения всех задач: " + epic1);
-
-        // Удаление задачи и эпика
-        manager.deleteTask(task1.getId());
-        manager.deleteEpic(epic1.getId());
-
-        // Вывод списков после удаления
-        System.out.println("Список задач после удаления:");
-        System.out.println(manager.getAllTasks());
-
-        System.out.println("Список эпиков после удаления:");
-        System.out.println(manager.getAllEpics());
     }
 }
