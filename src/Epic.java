@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class Epic extends Task {
     private List<SubTask> subtasks;
 
@@ -7,10 +10,21 @@ public class Epic extends Task {
     }
 
     public void addSubtask(SubTask subtask) {
-        subtasks.add(subtask);
+        if (subtask != null) {
+            subtasks.add(subtask);
+        }
+    }
+
+    public List<SubTask> getSubtasks() {
+        return new ArrayList<>(subtasks);
     }
 
     public void updateStatus() {
+        if (subtasks.isEmpty()) {
+            this.setStatus(TaskStatus.NEW);
+            return;
+        }
+
         boolean allDone = true;
         boolean allNew = true;
 
