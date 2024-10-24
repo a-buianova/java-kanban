@@ -55,12 +55,30 @@ public class Main {
         manager.createSubTask(subtask1);
         manager.createSubTask(subtask2);
 
-        System.out.println(manager.getSubtasksForEpic(epic1.getId()));
+        // Вывод списка задач и эпиков
+        System.out.println("Список задач:");
+        System.out.println(manager.getAllTasks());
 
+        System.out.println("Список эпиков:");
+        System.out.println(manager.getAllEpics());
+
+        // Изменение статусов
         subtask1.setStatus(TaskStatus.DONE);
         subtask2.setStatus(TaskStatus.DONE);
         epic1.updateStatus();
 
+        // Проверка статуса
         System.out.println("Эпик после выполнения всех задач: " + epic1);
+
+        // Удаление задачи и эпика
+        manager.deleteTask(task1.getId());
+        manager.deleteEpic(epic1.getId());
+
+        // Вывод списков после удаления
+        System.out.println("Список задач после удаления:");
+        System.out.println(manager.getAllTasks());
+
+        System.out.println("Список эпиков после удаления:");
+        System.out.println(manager.getAllEpics());
     }
 }
