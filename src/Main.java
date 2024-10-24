@@ -4,25 +4,17 @@ public class Main {
     public static void main(String[] args) {
         TaskManager manager = new TaskManager();
         Scanner scanner = new Scanner(System.in);
-        String taskTitle;
-        String taskDescription;
 
-        while (true) {
-            System.out.println("Введите название задачи:");
-            taskTitle = scanner.nextLine();
-            if (taskTitle != null && !taskTitle.isEmpty()) {
-                break;
-            }
-            System.out.println("Название задачи не может быть пустым. Попробуйте снова.");
+        System.out.println("Введите название задачи:");
+        String taskTitle = scanner.nextLine();
+        if (taskTitle == null || taskTitle.isEmpty()) {
+            throw new IllegalArgumentException("Название задачи не может быть пустым.");
         }
 
-        while (true) {
-            System.out.println("Введите описание задачи:");
-            taskDescription = scanner.nextLine();
-            if (taskDescription != null && !taskDescription.isEmpty()) {
-                break;
-            }
-            System.out.println("Описание задачи не может быть пустым. Попробуйте снова.");
+        System.out.println("Введите описание задачи:");
+        String taskDescription = scanner.nextLine();
+        if (taskDescription == null || taskDescription.isEmpty()) {
+            throw new IllegalArgumentException("Описание задачи не может быть пустым.");
         }
 
         Task task1 = new Task(0, taskTitle, taskDescription, TaskStatus.NEW);
