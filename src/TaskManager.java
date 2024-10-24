@@ -26,11 +26,11 @@ public class TaskManager {
     }
 
     public SubTask createSubTask(SubTask subtask) {
-        if (subtasks.containsKey(subtask.getId())) {
-            throw new IllegalArgumentException("Подзадача с таким ID уже существует.");
-        }
         if (!epics.containsKey(subtask.getEpicId())) {
             throw new IllegalArgumentException("Эпик с ID " + subtask.getEpicId() + " не найден.");
+        }
+        if (subtasks.containsKey(subtask.getId())) {
+            throw new IllegalArgumentException("Подзадача с таким ID уже существует.");
         }
         subtask.setId(++idCounter);
         subtasks.put(subtask.getId(), subtask);
@@ -63,7 +63,11 @@ public class TaskManager {
     }
 
     public List<SubTask> getSubtasksForEpic(int epicId) {
-        return new ArrayList<>(epics.get(epicId).getSubtasks());
+        Epic epic = epics.get(epicId);
+        if (epic != null) {
+            return new ArrayList<>(epic.getSubtasks());
+        }
+        return Collections.emptyList();
     }
 
     public List<Task> getTasksSortedByStatus() {
