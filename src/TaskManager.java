@@ -58,4 +58,17 @@ public class TaskManager {
     public List<SubTask> getSubtasksForEpic(int epicId) {
         return new ArrayList<>(epics.get(epicId).getSubtasks());
     }
+
+    public List<Task> getTasksSortedByStatus() {
+        return tasks.values().stream()
+                .sorted(Comparator.comparing(Task::getStatus))
+                .collect(Collectors.toList());
+    }
+
+    public List<SubTask> getSubtasksSortedByStatus(int epicId) {
+        return epics.get(epicId).getSubtasks().stream()
+                .sorted(Comparator.comparing(SubTask::getStatus))
+                .collect(Collectors.toList());
+    }
+}
 }
