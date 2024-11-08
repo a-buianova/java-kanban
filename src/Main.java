@@ -1,22 +1,42 @@
-import java.util.Scanner;
+import manager.TaskManager;
+import task.Epic;
+import task.SubTask;
+import task.TaskStatus;
 
 public class Main {
     public static void main(String[] args) {
         TaskManager manager = new TaskManager();
-        Epic epic1 = new Epic(1, "", "");
-        Epic epic2 = new Epic(2, "", "");
-        SubTask subTask1_1 = new SubTask(1, "", "", TaskStatus.NEW, epic1.getId());
-        SubTask subTask1_2 = new SubTask(2, "", "", TaskStatus.NEW, epic1.getId());
-        SubTask subTask2_1 = new SubTask(3, "", "", TaskStatus.NEW, epic2.getId());
+
+        Epic epic1 = new Epic(1, "Организация праздника", "Организовать день рождения");
+        Epic epic2 = new Epic(2, "Организация вечеринки", "Организовать вечеринку");
+
         manager.createEpic(epic1);
         manager.createEpic(epic2);
+
+        SubTask subTask1_1 = new SubTask(1, "Забронировать ресторан", "Найти и забронировать ресторан", TaskStatus.NEW, epic1.getId());
+        SubTask subTask1_2 = new SubTask(2, "Отправить приглашения", "Разослать пригласительные", TaskStatus.NEW, epic1.getId());
+        SubTask subTask2_1 = new SubTask(3, "Приготовить торт", "Испечь торт", TaskStatus.NEW, epic2.getId());
+
         manager.createSubTask(subTask1_1);
         manager.createSubTask(subTask1_2);
         manager.createSubTask(subTask2_1);
-        System.out.println(manager.getAllEpics());
+
+        System.out.println("Список эпиков: " + manager.getAllEpics());
+
         subTask2_1.setStatus(TaskStatus.DONE);
         manager.updateSubTask(subTask2_1);
-        System.out.println(epic2.getStatus());
 
+        manager.updateEpicStatus(epic2.getId());
+        System.out.println("Статус эпика 2 после изменения подзадачи: " + epic2.getStatus());
+
+        manager.deleteSubtask(subTask1_1.getId());
+        manager.updateEpicStatus(epic1.getId());
+        System.out.println("Статус эпика 1 после удаления подзадачи: " + epic1.getStatus());
+
+        manager.deleteTask(1);
+        manager.deleteEpic(epic2.getId());
+
+        System.out.println("Список задач после удаления: " + manager.getAllTasks());
+        System.out.println("Список эпиков после удаления: " + manager.getAllEpics());
     }
 }
