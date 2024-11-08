@@ -19,33 +19,6 @@ public class Epic extends Task {
         return new ArrayList<>(subtasks);
     }
 
-    public void updateStatus() {
-        if (subtasks.isEmpty()) {
-            this.setStatus(TaskStatus.NEW);
-            return;
-        }
-
-        boolean allDone = true;
-        boolean allNew = true;
-
-        for (SubTask subtask : subtasks) {
-            if (subtask.getStatus() != TaskStatus.DONE) {
-                allDone = false;
-            }
-            if (subtask.getStatus() != TaskStatus.NEW) {
-                allNew = false;
-            }
-        }
-
-        if (allDone) {
-            this.setStatus(TaskStatus.DONE);
-        } else if (allNew) {
-            this.setStatus(TaskStatus.NEW);
-        } else {
-            this.setStatus(TaskStatus.IN_PROGRESS);
-        }
-    }
-
     @Override
     public String toString() {
         return "Epic{" +
