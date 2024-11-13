@@ -25,18 +25,16 @@ public class Main {
 
         subTask2_1.setStatus(TaskStatus.DONE);
         manager.updateSubTask(subTask2_1);
-
-        manager.updateEpicStatus(epic2.getId());
         System.out.println("Статус эпика 2 после изменения подзадачи: " + epic2.getStatus());
 
         manager.deleteSubtask(subTask1_1.getId());
-        manager.updateEpicStatus(epic1.getId());
         System.out.println("Статус эпика 1 после удаления подзадачи: " + epic1.getStatus());
 
-        manager.deleteTask(1);
-        manager.deleteEpic(epic2.getId());
+        manager.deleteAllTasks();
+        manager.deleteAllEpics();
+        manager.deleteAllSubtasks();
 
-        System.out.println("Список задач после удаления: " + manager.getAllTasks());
-        System.out.println("Список эпиков после удаления: " + manager.getAllEpics());
+        System.out.println("Список задач после удаления всех задач: " + manager.getAllTasks());
+        System.out.println("Список эпиков после удаления всех эпиков: " + manager.getAllEpics());
     }
 }
