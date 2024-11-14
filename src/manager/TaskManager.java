@@ -155,15 +155,27 @@ public class TaskManager {
     }
 
     public void deleteAllTasks() {
-        tasks.clear(); // Очистка всех задач
+        tasks.clear();
     }
 
     public void deleteAllEpics() {
-        epics.clear(); // Очистка всех эпиков
+        for (Epic epic : epics.values()) {
+            for (SubTask subtask : epic.getSubtasks()) {
+                subtasks.remove(subtask.getId());
+            }
+        }
+        epics.clear();
     }
 
     public void deleteAllSubtasks() {
-        subtasks.clear(); // Очистка всех подзадач
+        for (SubTask subtask : subtasks.values()) {
+            Epic epic = epics.get(subtask.getEpicId());
+            if (epic != null) {
+                epic.getSubtasks().remove(subtask);
+                updateEpicStatus(epic.getId());
+            }
+        }
+        subtasks.clear();
     }
 
 }
