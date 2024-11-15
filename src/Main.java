@@ -1,3 +1,4 @@
+import manager.InMemoryTaskManager;
 import manager.TaskManager;
 import task.Epic;
 import task.SubTask;
@@ -5,7 +6,7 @@ import task.TaskStatus;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = new InMemoryTaskManager();
 
         Epic epic1 = new Epic(1, "Организация праздника", "Организовать день рождения");
         Epic epic2 = new Epic(2, "Организация вечеринки", "Организовать вечеринку");
@@ -36,5 +37,6 @@ public class Main {
 
         System.out.println("Список задач после удаления всех задач: " + manager.getAllTasks());
         System.out.println("Список эпиков после удаления всех эпиков: " + manager.getAllEpics());
+        System.out.println("История просмотров задач: " + manager);
     }
 }
