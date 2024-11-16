@@ -1,21 +1,17 @@
 package manager;
 
-import task.Task;
-import task.SubTask;
-import task.Epic;
-import task.TaskStatus;
+import task.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private Map<Integer, Task> tasks = new HashMap<>();
-    private Map<Integer, Epic> epics = new HashMap<>();
-    private Map<Integer, SubTask> subtasks = new HashMap<>();
+    private Map<Integer, Task> tasks = new HashMap<>(); // Хранение задач
+    private Map<Integer, Epic> epics = new HashMap<>(); // Хранение эпиков
+    private Map<Integer, SubTask> subtasks = new HashMap<>(); // Хранение подзадач
     private int idCounter = 0;
 
-    // Менеджер истории
-    private HistoryManager historyManager = Managers.getDefaultHistory();
+    private HistoryManager historyManager = Managers.getDefaultHistory(); // Менеджер истории
 
     @Override
     public Task createTask(Task task) {
@@ -42,6 +38,12 @@ public class InMemoryTaskManager implements TaskManager {
         if (subtasks.containsKey(subtask.getId())) {
             throw new IllegalArgumentException("Подзадача с ID " + subtask.getId() + " уже существует.");
         }
+
+        // Проверка, что эпик не может быть подзадачей сам себе
+        if (subtask.getEpicId() == subtask.getId()) {
+            throw new IllegalArgumentException("Подзадача не может быть привязана к самому себе как эпик.");
+        }
+
         if (!epics.containsKey(subtask.getEpicId())) {
             throw new IllegalArgumentException("Эпик с ID " + subtask.getEpicId() + " не найден.");
         }
@@ -91,12 +93,6 @@ public class InMemoryTaskManager implements TaskManager {
             historyManager.add(subtask); // Добавление подзадачи в историю
         }
         return subtask;
-    }
-
-    // Метод для получения истории просмотров
-    @Override
-    public List<Task> getHistory() {
-        return historyManager.getHistory(); // Получаем историю из менеджера истории
     }
 
     @Override
@@ -172,7 +168,11 @@ public class InMemoryTaskManager implements TaskManager {
         subtasks.clear();
     }
 
-    // Метод для обновления статуса эпика
+    @Override
+    public List<Task> getHistory() {
+        return historyManager.getHistory();
+    }
+
     private void updateEpicStatus(int epicId) {
         Epic epic = getEpic(epicId);
         if (epic == null) {
