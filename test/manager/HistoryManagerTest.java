@@ -13,30 +13,30 @@ class HistoryManagerTest {
 
     @BeforeEach
     void setUp() {
-        this.historyManager = Managers.getDefaultHistory(); // Получаем экземпляр HistoryManager через утилиту
-        this.taskManager = new InMemoryTaskManager(); // Инициализация TaskManager
+        this.historyManager = Managers.getDefaultHistory();
+        this.taskManager = new InMemoryTaskManager();
     }
 
     @AfterEach
     void tearDown() {
-        this.historyManager = null; // Очищаем менеджер истории
-        this.taskManager = null; // Очищаем TaskManager
+        this.historyManager = null;
+        this.taskManager = null;
     }
 
-    // 1. Проверка, что задача добавляется в историю
+    // Проверка, что задача добавляется в историю
     @Test
     void testAddTaskToHistory() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         taskManager.createTask(task);
-        taskManager.getTask(1); // Задача должна попасть в историю
+        taskManager.getTask(1);
 
         List<Task> history = taskManager.getHistory();
         assertNotNull(history);
-        assertEquals(1, history.size()); // Должна быть одна задача в истории
-        assertEquals(task.getId(), history.get(0).getId()); // Задача в истории должна быть такой же
+        assertEquals(1, history.size());
+        assertEquals(task.getId(), history.get(0).getId());
     }
 
-    // 2. Проверка, что задача в истории не удаляется при новом добавлении
+    // Проверка, что задача в истории не удаляется при новом добавлении
     @Test
     void testHistoryKeepsTaskAfterAccess() {
         Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
@@ -45,16 +45,16 @@ class HistoryManagerTest {
         taskManager.createTask(task1);
         taskManager.createTask(task2);
 
-        taskManager.getTask(1); // Задача 1 должна попасть в историю
-        taskManager.getTask(2); // Задача 2 должна попасть в историю
+        taskManager.getTask(1);
+        taskManager.getTask(2);
 
         List<Task> history = taskManager.getHistory();
-        assertEquals(2, history.size()); // В истории должно быть две задачи
-        assertTrue(history.contains(task1)); // Задача 1 должна быть в истории
-        assertTrue(history.contains(task2)); // Задача 2 должна быть в истории
+        assertEquals(2, history.size());
+        assertTrue(history.contains(task1));
+        assertTrue(history.contains(task2));
     }
 
-    // 3. Проверка на то, что задачи в истории отсортированы по порядку
+    // Проверка на то, что задачи в истории отсортированы по порядку
     @Test
     void testHistoryTaskOrder() {
         Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
@@ -67,50 +67,51 @@ class HistoryManagerTest {
         taskManager.getTask(2);
 
         List<Task> history = taskManager.getHistory();
-        assertEquals(task1, history.get(0)); // Задача 1 должна быть первой в истории
-        assertEquals(task2, history.get(1)); // Задача 2 должна быть второй в истории
+        assertEquals(task1, history.get(0));
+        assertEquals(task2, history.get(1));
     }
 
-    // 4. Проверка на хранение не более 10 задач в истории
+    // Проверка на хранение не более 10 задач в истории
     @Test
     void testHistorySizeLimit() {
         for (int i = 1; i <= 15; i++) {
             Task task = new Task(i, "Task " + i, "Description", TaskStatus.NEW);
             taskManager.createTask(task);
-            taskManager.getTask(i); // Все задачи должны попасть в историю
+            taskManager.getTask(i);
         }
 
         List<Task> history = taskManager.getHistory();
-        assertEquals(10, history.size()); // История должна содержать не более 10 задач
-        assertEquals(6, history.get(0).getId()); // Задача с id 6 должна быть первой в истории
-        assertEquals(15, history.get(9).getId()); // Задача с id 15 должна быть последней в истории
+        assertEquals(10, history.size());
+        assertEquals(6, history.get(0).getId());
+        assertEquals(15, history.get(9).getId());
     }
 
-    // 5. Проверка, что изменения задачи сохраняются в истории
+    // Проверка, что изменения задачи сохраняются в истории
     @Test
     void testTaskUpdateHistory() {
-        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.getTask(1); // Задача 1 добавлена в историю
+        Epic epic = new Epic(1, "Epic 1", "Description");
+        taskManager.createEpic(epic);
+        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
+        taskManager.createSubTask(subtask);
+        SubTask subTaskCloned = taskManager.getSubtask(2);
 
-        task.setStatus(TaskStatus.IN_PROGRESS);
-        taskManager.updateSubTask((SubTask) task);  // Теперь мы обновляем задачу, а не приводим её к SubTask
+        subTaskCloned.setStatus(TaskStatus.IN_PROGRESS);
+        taskManager.updateSubTask(subTaskCloned);
 
-        taskManager.getTask(1); // Повторный доступ к задаче
+        taskManager.getSubtask(2);
 
         List<Task> history = taskManager.getHistory();
-        assertEquals(2, history.size()); // В истории две версии задачи
-        assertEquals(TaskStatus.NEW, history.get(0).getStatus()); // Первая версия задачи имеет статус NEW
-        assertEquals(TaskStatus.IN_PROGRESS, history.get(1).getStatus()); // Вторая версия задачи имеет статус IN_PROGRESS
+        assertEquals(2, history.size());
+        assertEquals(TaskStatus.NEW, history.get(0).getStatus());
+        assertEquals(TaskStatus.IN_PROGRESS, history.get(1).getStatus());
     }
 
-    // 6. Проверка, что задачи не добавляются в историю, если они не были получены
+    // Проверка, что задачи не добавляются в историю, если они не были получены
     @Test
     void testNoTaskInHistoryIfNotAccessed() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         taskManager.createTask(task);
 
-        // Задача не была получена, поэтому она не должна быть в истории
         List<Task> history = taskManager.getHistory();
         assertTrue(history.isEmpty());
     }

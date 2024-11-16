@@ -13,73 +13,73 @@ class TaskManagerTest {
 
     @BeforeEach
     void setUp() {
-        this.taskManager = new InMemoryTaskManager(); // Инициализация TaskManager
+        this.taskManager = new InMemoryTaskManager();
     }
 
     @AfterEach
     void tearDown() {
-        this.taskManager = null; // Очищаем TaskManager после каждого теста
+        this.taskManager = null;
     }
 
-    // 1. Проверка создания задач
+    // Проверка создания задач
     @Test
     void testCreateTask() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         taskManager.createTask(task);
-        assertNotNull(taskManager.getTask(task.getId())); // Задача должна быть добавлена в менеджер
+        assertNotNull(taskManager.getTask(task.getId()));
     }
 
-    // 2. Проверка создания эпиков
+    // Проверка создания эпиков
     @Test
     void testCreateEpic() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
-        assertNotNull(taskManager.getEpic(epic.getId())); // Эпик должен быть добавлен в менеджер
+        assertNotNull(taskManager.getEpic(epic.getId()));
     }
 
-    // 3. Проверка создания подзадач
+    // Проверка создания подзадач
     @Test
     void testCreateSubTask() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask);
-        assertNotNull(taskManager.getSubtask(subtask.getId())); // Подзадача должна быть добавлена в менеджер
+        SubTask createdSubTask = taskManager.createSubTask(subtask);
+        assertNotNull(taskManager.getSubtask(createdSubTask.getId()));
     }
 
-    // 4. Проверка обновления подзадачи
+    // Проверка обновления подзадачи
     @Test
     void testUpdateSubTask() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask);
+        SubTask createdSubTask = taskManager.createSubTask(subtask);
 
-        subtask.setStatus(TaskStatus.DONE);
-        taskManager.updateSubTask(subtask);
+        createdSubTask.setStatus(TaskStatus.DONE);
+        taskManager.updateSubTask(createdSubTask);
 
-        assertEquals(TaskStatus.DONE, taskManager.getSubtask(subtask.getId()).getStatus()); // Статус подзадачи должен обновиться
+        assertEquals(TaskStatus.DONE, taskManager.getSubtask(createdSubTask.getId()).getStatus());
     }
 
-    // 5. Проверка удаления задачи
+    // Проверка удаления задачи
     @Test
     void testDeleteTask() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         taskManager.createTask(task);
         taskManager.deleteTask(task.getId());
-        assertNull(taskManager.getTask(task.getId())); // Задача должна быть удалена
+        assertNull(taskManager.getTask(task.getId()));
     }
 
-    // 6. Проверка удаления эпика
+    // Проверка удаления эпика
     @Test
     void testDeleteEpic() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
         taskManager.deleteEpic(epic.getId());
-        assertNull(taskManager.getEpic(epic.getId())); // Эпик должен быть удален
+        assertNull(taskManager.getEpic(epic.getId()));
     }
 
-    // 7. Проверка удаления подзадачи
+    // Проверка удаления подзадачи
     @Test
     void testDeleteSubtask() {
         Epic epic = new Epic(1, "Epic 1", "Description");
@@ -87,10 +87,10 @@ class TaskManagerTest {
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
         taskManager.createSubTask(subtask);
         taskManager.deleteSubtask(subtask.getId());
-        assertNull(taskManager.getSubtask(subtask.getId())); // Подзадача должна быть удалена
+        assertNull(taskManager.getSubtask(subtask.getId()));
     }
 
-    // 8. Проверка сортировки задач по статусу
+    // Проверка сортировки задач по статусу
     @Test
     void testGetTasksSortedByStatus() {
         Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
@@ -99,11 +99,11 @@ class TaskManagerTest {
         taskManager.createTask(task2);
 
         List<Task> sortedTasks = taskManager.getTasksSortedByStatus();
-        assertEquals(task1, sortedTasks.get(0)); // Задача с новым статусом должна быть первой
-        assertEquals(task2, sortedTasks.get(1)); // Задача с завершенным статусом должна быть второй
+        assertEquals(task1, sortedTasks.get(0));
+        assertEquals(task2, sortedTasks.get(1));
     }
 
-    // 9. Проверка сортировки подзадач по статусу
+    // Проверка сортировки подзадач по статусу
     @Test
     void testGetSubtasksSortedByStatus() {
         Epic epic = new Epic(1, "Epic 1", "Description");
@@ -112,15 +112,15 @@ class TaskManagerTest {
         SubTask subtask1 = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
         SubTask subtask2 = new SubTask(2, "Subtask 2", "Description", TaskStatus.DONE, epic.getId());
 
-        taskManager.createSubTask(subtask1);
-        taskManager.createSubTask(subtask2);
+        SubTask createSubTask1 = taskManager.createSubTask(subtask1);
+        SubTask createSubTask2 = taskManager.createSubTask(subtask2);
 
         List<SubTask> sortedSubtasks = taskManager.getSubtasksSortedByStatus(epic.getId());
-        assertEquals(subtask1, sortedSubtasks.get(0)); // Подзадача с новым статусом должна быть первой
-        assertEquals(subtask2, sortedSubtasks.get(1)); // Подзадача с завершенным статусом должна быть второй
+        assertEquals(createSubTask1, sortedSubtasks.get(0));
+        assertEquals(createSubTask2, sortedSubtasks.get(1));
     }
 
-    // 10. Проверка истории задач
+    // Проверка истории задач
     @Test
     void testGetHistory() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
@@ -129,11 +129,11 @@ class TaskManagerTest {
 
         List<Task> history = taskManager.getHistory();
         assertNotNull(history);
-        assertEquals(1, history.size()); // Должна быть добавлена одна задача в историю
+        assertEquals(1, history.size());
         assertEquals(task.getId(), history.get(0).getId());
     }
 
-    // 11. Проверка, что задачи добавляются в историю
+    // Проверка, что задачи добавляются в историю
     @Test
     void testHistoryManagerAddsTask() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
@@ -142,25 +142,25 @@ class TaskManagerTest {
 
         List<Task> history = taskManager.getHistory();
         assertNotNull(history);
-        assertEquals(1, history.size());  // Должна быть добавлена одна задача в историю
+        assertEquals(1, history.size());
         assertEquals(task.getId(), history.get(0).getId());
     }
 
-    // 12. Проверка, что подзадачи добавляются в историю
+    // Проверка, что подзадачи добавляются в историю
     @Test
     void testHistoryManagerAddsSubtask() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask);
-        taskManager.getSubtask(subtask.getId());
+        SubTask createdSubTask = taskManager.createSubTask(subtask);
+        taskManager.getSubtask(createdSubTask.getId());
 
         List<Task> history = taskManager.getHistory();
         assertNotNull(history);
-        assertEquals(1, history.size());  // Должна быть добавлена одна подзадача в историю
-        assertEquals(subtask.getId(), history.get(0).getId());
+        assertEquals(1, history.size());
+        assertEquals(createdSubTask.getId(), history.getFirst().getId());
     }
-    //13. Проверка, что задачи с одинаковым id не могут быть добавлены в менеджер
+    //Проверка, что задачи с одинаковым id не могут быть добавлены в менеджер
     @Test
     void testTaskIdConflict() {
         Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
@@ -170,20 +170,20 @@ class TaskManagerTest {
         assertThrows(IllegalArgumentException.class, () -> taskManager.createTask(task2));
     }
 
-    // 14. Проверка на неизменность задачи после добавления в менеджер
+    // Проверка на неизменность задачи после добавления в менеджер
     @Test
     void testTaskImmutability() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         taskManager.createTask(task);
 
         Task fetchedTask = taskManager.getTask(1);
-        fetchedTask.setStatus(TaskStatus.DONE); // Попытка изменить статус после добавления
+        fetchedTask.setStatus(TaskStatus.DONE);
 
         Task unchangedTask = taskManager.getTask(1);
-        assertNotEquals(fetchedTask.getStatus(), unchangedTask.getStatus()); // Проверяем, что статус не был изменен
+        assertNotEquals(fetchedTask.getStatus(), unchangedTask.getStatus());
     }
 
-    // 15. Проверка инициализации менеджеров
+    // Проверка инициализации менеджеров
     @Test
     void testHistoryManagerInitialization() {
         assertNotNull(Managers.getDefaultHistory(), "HistoryManager должен быть инициализирован");

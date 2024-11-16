@@ -6,12 +6,12 @@ import java.util.stream.Collectors;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private Map<Integer, Task> tasks = new HashMap<>(); // Хранение задач
-    private Map<Integer, Epic> epics = new HashMap<>(); // Хранение эпиков
-    private Map<Integer, SubTask> subtasks = new HashMap<>(); // Хранение подзадач
+    private Map<Integer, Task> tasks = new HashMap<>();
+    private Map<Integer, Epic> epics = new HashMap<>();
+    private Map<Integer, SubTask> subtasks = new HashMap<>();
     private int idCounter = 0;
 
-    private HistoryManager historyManager = Managers.getDefaultHistory(); // Менеджер истории
+    private HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
     public Task createTask(Task task) {
@@ -34,11 +34,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public SubTask createSubTask(SubTask subtask) {
-        if (subtasks.containsKey(subtask.getId())) {
-            throw new IllegalArgumentException("Подзадача с ID " + subtask.getId() + " уже существует.");
-        }
-
+    public SubTask createSubTask(SubTask outerSubtask) {
+        SubTask subtask = outerSubtask.clone();
+        subtask.setId(++idCounter);
         // Проверка, что эпик не может быть подзадачей сам себе
         if (subtask.getEpicId() == subtask.getId()) {
             throw new IllegalArgumentException("Подзадача не может быть привязана к самому себе как эпик.");
@@ -47,7 +45,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!epics.containsKey(subtask.getEpicId())) {
             throw new IllegalArgumentException("Эпик с ID " + subtask.getEpicId() + " не найден.");
         }
-        subtask.setId(++idCounter);
+
         subtasks.put(subtask.getId(), subtask);
         epics.get(subtask.getEpicId()).addSubtask(subtask);
         updateEpicStatus(subtask.getEpicId());
@@ -55,7 +53,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public SubTask updateSubTask(SubTask subtask) {
+    public SubTask updateSubTask(SubTask outerSubtask) {
+        SubTask subtask = outerSubtask.clone();
         if (!subtasks.containsKey(subtask.getId())) {
             throw new IllegalArgumentException("Подзадача с ID " + subtask.getId() + " не найдена.");
         }
@@ -72,16 +71,17 @@ public class InMemoryTaskManager implements TaskManager {
     public Task getTask(int id) {
         Task task = tasks.get(id);
         if (task != null) {
-            historyManager.add(task); // Добавление задачи в историю
+            historyManager.add(task);
+            return task.clone();
         }
-        return task;
+        return null;
     }
 
     @Override
     public Epic getEpic(int id) {
         Epic epic = epics.get(id);
         if (epic != null) {
-            historyManager.add(epic); // Добавление эпика в историю
+            historyManager.add(epic);
         }
         return epic;
     }
@@ -90,7 +90,7 @@ public class InMemoryTaskManager implements TaskManager {
     public SubTask getSubtask(int id) {
         SubTask subtask = subtasks.get(id);
         if (subtask != null) {
-            historyManager.add(subtask); // Добавление подзадачи в историю
+            historyManager.add(subtask);
         }
         return subtask;
     }
@@ -174,7 +174,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void updateEpicStatus(int epicId) {
-        Epic epic = getEpic(epicId);
+        Epic epic = epics.get(epicId);
         if (epic == null) {
             throw new IllegalArgumentException("Эпик с ID " + epicId + " не найден.");
         }

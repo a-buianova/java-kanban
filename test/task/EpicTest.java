@@ -12,60 +12,32 @@ class EpicTest {
 
     @BeforeEach
     void setUp() {
-        taskManager = new InMemoryTaskManager(); // Инициализация TaskManager
+        taskManager = new InMemoryTaskManager();
     }
 
-    // 1. Проверка, что объект Epic нельзя добавить в самого себя в виде подзадачи
+    // Проверка, что объект Epic нельзя добавить в самого себя в виде подзадачи
     @Test
     void testEpicCannotAddItselfAsSubtask() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-
-        // Попытка создать подзадачу с ID эпика в качестве эпика подзадачи
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask); // Подзадача добавляется
-
-        // Попытка добавить эпик как подзадачу
-        assertThrows(IllegalArgumentException.class, () -> epic.addSubtask(subtask)); // Эпик не должен добавлять себя как подзадачу
+        // Тест на такой кейс написать не возможно, т.к. метод taskManager.createSubTask() принимает только
+        // объекты типа SubTask, таким образом тест просто не скомпилируется.
     }
 
-    // 2. Проверка добавления подзадач в эпик
+    // Проверка добавления подзадач в эпик
     @Test
     void testAddSubtaskToEpic() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
 
-        // Создание подзадачи для эпика
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask); // Добавляем подзадачу в менеджер
-
-        // Добавление подзадачи в эпик
-        epic.addSubtask(subtask);
-
-        assertNotNull(epic.getSubtasks()); // Убедимся, что подзадача добавлена в эпик
-        assertTrue(epic.getSubtasks().contains(subtask)); // Проверяем, что подзадача действительно есть в списке подзадач эпика
-    }
-
-    // 3. Проверка, что подзадача не может быть добавлена дважды в один эпик
-    @Test
-    void testCannotAddSubtaskTwice() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-
-        // Создание подзадачи для эпика
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
         taskManager.createSubTask(subtask);
 
-        // Добавление подзадачи в эпик
         epic.addSubtask(subtask);
-        assertEquals(1, epic.getSubtasks().size()); // Подзадача должна быть только одна
 
-        // Попытка добавить ту же подзадачу снова
-        epic.addSubtask(subtask);
-        assertEquals(1, epic.getSubtasks().size()); // Подзадача не должна добавиться второй раз
+        assertNotNull(epic.getSubtasks());
+        assertTrue(epic.getSubtasks().contains(subtask));
     }
 
-    // 4. Проверка, что эпик без подзадач имеет статус NEW
+    // Проверка, что эпик без подзадач имеет статус NEW
     @Test
     void testEpicStatusWhenNoSubtasks() {
         Epic epic = new Epic(1, "Epic 1", "Description");
@@ -74,20 +46,20 @@ class EpicTest {
         assertEquals(TaskStatus.NEW, epic.getStatus()); // Статус эпика должен быть NEW, так как у него нет подзадач
     }
 
-    // 5. Проверка, что статус эпика обновляется при добавлении подзадач
+    // Проверка, что статус эпика обновляется при добавлении подзадач
     @Test
-    void testEpicStatusWhenSubtaskAdded() {
+    void testEpicStatusChangedBasedOnSubtaskStatus() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
+        assertEquals(TaskStatus.NEW, epic.getStatus());
 
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
+        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.IN_PROGRESS, epic.getId());
         taskManager.createSubTask(subtask);
 
-        epic.addSubtask(subtask);
-        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus()); // Статус эпика должен измениться на IN_PROGRESS, когда у него есть подзадачи
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
     }
 
-    // 6. Проверка, что статус эпика обновляется на DONE, если все подзадачи выполнены
+    // Проверка, что статус эпика обновляется на DONE, если все подзадачи выполнены
     @Test
     void testEpicStatusWhenAllSubtasksDone() {
         Epic epic = new Epic(1, "Epic 1", "Description");

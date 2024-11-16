@@ -1,17 +1,19 @@
 package manager;
 import task.Task;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 public class InMemoryHistoryManager implements HistoryManager {
     // Хранение истории (максимум 10 последних задач)
-    private List<Task> history = new ArrayList<>();
+    private final List<Task> history = new LinkedList<>();
 
     @Override
     public void add(Task task) {
         if (!history.contains(task)) {
-            history.add(task);
+            history.addLast(task.clone());
             if (history.size() > 10) {
-                history.remove(0);
+                history.removeFirst();
             }
         }
     }
