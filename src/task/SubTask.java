@@ -5,6 +5,11 @@ public class SubTask extends Task implements Cloneable {
 
     public SubTask(int id, String title, String description, TaskStatus status, int epicId) {
         super(id, title, description, status);
+
+        if (epicId <= 0) {
+            throw new IllegalArgumentException("ID эпика должен быть положительным числом.");
+        }
+
         this.epicId = epicId;
     }
 

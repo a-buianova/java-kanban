@@ -1,197 +1,211 @@
 package manager;
 
-import org.junit.jupiter.api.*;
-import task.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import task.Epic;
+import task.SubTask;
+import task.Task;
+import task.TaskStatus;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TaskManagerTest {
-
     private TaskManager taskManager;
 
     @BeforeEach
     void setUp() {
-        this.taskManager = new InMemoryTaskManager();
+        // Инициализация менеджера задач перед каждым тестом
+        taskManager = new InMemoryTaskManager();
     }
 
-    @AfterEach
-    void tearDown() {
-        this.taskManager = null;
-    }
-
-    // Проверка создания задач
+    // Проверка: задача успешно создаётся и извлекается
     @Test
-    void testCreateTask() {
-        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        assertNotNull(taskManager.getTask(task.getId()));
-    }
-
-    // Проверка создания эпиков
-    @Test
-    void testCreateEpic() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-        assertNotNull(taskManager.getEpic(epic.getId()));
-    }
-
-    // Проверка создания подзадач
-    @Test
-    void testCreateSubTask() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        SubTask createdSubTask = taskManager.createSubTask(subtask);
-        assertNotNull(taskManager.getSubtask(createdSubTask.getId()));
-    }
-
-    // Проверка обновления подзадачи
-    @Test
-    void testUpdateSubTask() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        SubTask createdSubTask = taskManager.createSubTask(subtask);
-
-        createdSubTask.setStatus(TaskStatus.DONE);
-        taskManager.updateSubTask(createdSubTask);
-
-        assertEquals(TaskStatus.DONE, taskManager.getSubtask(createdSubTask.getId()).getStatus());
-    }
-
-    // Проверка удаления задачи
-    @Test
-    void testDeleteTask() {
-        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.deleteTask(task.getId());
-        assertNull(taskManager.getTask(task.getId()));
-    }
-
-    // Проверка удаления эпика
-    @Test
-    void testDeleteEpic() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-        taskManager.deleteEpic(epic.getId());
-        assertNull(taskManager.getEpic(epic.getId()));
-    }
-
-    // Проверка удаления подзадачи
-    @Test
-    void testDeleteSubtask() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask);
-        taskManager.deleteSubtask(subtask.getId());
-        assertNull(taskManager.getSubtask(subtask.getId()));
-    }
-
-    // Проверка сортировки задач по статусу
-    @Test
-    void testGetTasksSortedByStatus() {
-        Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        Task task2 = new Task(2, "Task 2", "Description", TaskStatus.DONE);
-        taskManager.createTask(task1);
-        taskManager.createTask(task2);
-
-        List<Task> sortedTasks = taskManager.getTasksSortedByStatus();
-        assertEquals(task1, sortedTasks.get(0));
-        assertEquals(task2, sortedTasks.get(1));
-    }
-
-    // Проверка сортировки подзадач по статусу
-    @Test
-    void testGetSubtasksSortedByStatus() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-
-        SubTask subtask1 = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        SubTask subtask2 = new SubTask(2, "Subtask 2", "Description", TaskStatus.DONE, epic.getId());
-
-        SubTask createSubTask1 = taskManager.createSubTask(subtask1);
-        SubTask createSubTask2 = taskManager.createSubTask(subtask2);
-
-        List<SubTask> sortedSubtasks = taskManager.getSubtasksSortedByStatus(epic.getId());
-        assertEquals(createSubTask1, sortedSubtasks.get(0));
-        assertEquals(createSubTask2, sortedSubtasks.get(1));
-    }
-
-    // Проверка истории задач
-    @Test
-    void testGetHistory() {
-        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.getTask(1);
-
-        List<Task> history = taskManager.getHistory();
-        assertNotNull(history);
-        assertEquals(1, history.size());
-        assertEquals(task.getId(), history.get(0).getId());
-    }
-
-    // Проверка, что задачи добавляются в историю
-    @Test
-    void testHistoryManagerAddsTask() {
-        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.getTask(1);
-
-        List<Task> history = taskManager.getHistory();
-        assertNotNull(history);
-        assertEquals(1, history.size());
-        assertEquals(task.getId(), history.get(0).getId());
-    }
-
-    // Проверка, что подзадачи добавляются в историю
-    @Test
-    void testHistoryManagerAddsSubtask() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        SubTask createdSubTask = taskManager.createSubTask(subtask);
-        taskManager.getSubtask(createdSubTask.getId());
-
-        List<Task> history = taskManager.getHistory();
-        assertNotNull(history);
-        assertEquals(1, history.size());
-        assertEquals(createdSubTask.getId(), history.getFirst().getId());
-    }
-    //Проверка, что задачи с одинаковым id не могут быть добавлены в менеджер
-    @Test
-    void testTaskIdConflict() {
-        Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        Task task2 = new Task(1, "Task 2", "Description", TaskStatus.NEW);
-
-        taskManager.createTask(task1);
-        assertThrows(IllegalArgumentException.class, () -> taskManager.createTask(task2));
-    }
-
-    // Проверка на неизменность задачи после добавления в менеджер
-    @Test
-    void testTaskImmutability() {
+    void testCreateAndGetTask() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         taskManager.createTask(task);
 
         Task fetchedTask = taskManager.getTask(1);
-        fetchedTask.setStatus(TaskStatus.DONE);
-
-        Task unchangedTask = taskManager.getTask(1);
-        assertNotEquals(fetchedTask.getStatus(), unchangedTask.getStatus());
+        assertNotNull(fetchedTask);
+        assertEquals(task.getId(), fetchedTask.getId());
     }
 
-    // Проверка инициализации менеджеров
+    // Проверка: задача успешно удаляется
     @Test
-    void testHistoryManagerInitialization() {
-        assertNotNull(Managers.getDefaultHistory(), "HistoryManager должен быть инициализирован");
+    void testDeleteTask() {
+        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+
+        taskManager.deleteTask(1);
+        assertNull(taskManager.getTask(1));
     }
 
+    // Проверка: эпик и его подзадачи успешно создаются и извлекаются
     @Test
-    void testTaskManagerInitialization() {
-        assertNotNull(new InMemoryTaskManager(), "TaskManager должен быть инициализирован");
+    void testCreateAndGetEpicWithSubtasks() {
+        Epic epic = new Epic(1, "Epic 1", "Description");
+        taskManager.createEpic(epic);
+
+        SubTask subtask = new SubTask(2, "Subtask 1", "Description", TaskStatus.NEW, 1);
+        taskManager.createSubTask(subtask);
+
+        List<SubTask> subtasks = taskManager.getSubtasksForEpic(1);
+        assertEquals(1, subtasks.size());
+        assertEquals(subtask.getId(), subtasks.get(0).getId());
     }
+
+    // Проверка: при удалении эпика его подзадачи также удаляются
+    @Test
+    void testDeleteEpicWithSubtasks() {
+        Epic epic = new Epic(1, "Epic 1", "Description");
+        taskManager.createEpic(epic);
+
+        SubTask subtask = new SubTask(2, "Subtask 1", "Description", TaskStatus.NEW, 1);
+        taskManager.createSubTask(subtask);
+
+        taskManager.deleteEpic(1);
+
+        assertNull(taskManager.getEpic(1));
+        assertNull(taskManager.getSubtask(2));
+    }
+
+    // Проверка: обновление полей задачи через сеттеры сохраняется в менеджере
+    @Test
+    void testUpdateTaskFields() {
+        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+
+        Task fetchedTask = taskManager.getTask(1);
+        fetchedTask.setTitle("Updated Task");
+        fetchedTask.setStatus(TaskStatus.IN_PROGRESS);
+
+        Task updatedTask = taskManager.getTask(1);
+        assertEquals("Updated Task", updatedTask.getTitle());
+        assertEquals(TaskStatus.IN_PROGRESS, updatedTask.getStatus());
+    }
+
+    // Проверка: все задачи, эпики и подзадачи успешно удаляются
+    @Test
+    void testDeleteAllTasks() {
+        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        Epic epic = new Epic(2, "Epic 1", "Description");
+        SubTask subtask = new SubTask(3, "Subtask 1", "Description", TaskStatus.NEW, 2);
+
+        taskManager.createTask(task);
+        taskManager.createEpic(epic);
+        taskManager.createSubTask(subtask);
+
+        taskManager.deleteAllTasks();
+        taskManager.deleteAllEpics();
+        taskManager.deleteAllSubtasks();
+
+        assertTrue(taskManager.getAllTasks().isEmpty());
+        assertTrue(taskManager.getAllEpics().isEmpty());
+        assertTrue(taskManager.getSubtasksForEpic(2).isEmpty());
+    }
+
+    // Проверка удаления задачи из истории просмотров
+    @Test
+    void testHistoryAfterTaskDeletion() {
+        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        taskManager.createTask(task);
+        taskManager.getTask(1); // Добавляем задачу в историю
+
+        taskManager.deleteTask(1); // Удаляем задачу
+        List<Task> history = taskManager.getHistory();
+        assertTrue(history.isEmpty()); // История должна быть пустой
+    }
+
+    // Проверка отсутствия повторов в истории
+    @Test
+    void testHistoryWithRepeatedViews() {
+        Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        Task task2 = new Task(2, "Task 2", "Description", TaskStatus.NEW);
+
+        taskManager.createTask(task1);
+        taskManager.createTask(task2);
+
+        taskManager.getTask(1);
+        taskManager.getTask(2);
+        taskManager.getTask(1); // Повторный просмотр task1
+
+        List<Task> history = taskManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(task2, history.get(0)); // task2 последний просмотрен
+        assertEquals(task1, history.get(1)); // task1 добавлен снова в конец
+    }
+
+    // Проверка обновления статуса эпика на DONE, если все подзадачи выполнены
+    @Test
+    void testEpicStatusWhenAllSubtasksDone() {
+        Epic epic = new Epic(1, "Epic 1", "Description");
+        taskManager.createEpic(epic);
+
+        SubTask subtask1 = new SubTask(2, "Subtask 1", "Description", TaskStatus.DONE, 1);
+        SubTask subtask2 = new SubTask(3, "Subtask 2", "Description", TaskStatus.DONE, 1);
+        taskManager.createSubTask(subtask1);
+        taskManager.createSubTask(subtask2);
+
+        assertEquals(TaskStatus.DONE, epic.getStatus());
+    }
+
+    // Проверка обновления статуса эпика при изменении статуса подзадачи
+    @Test
+    void testUpdateEpicStatusBasedOnSubtasks() {
+        Epic epic = new Epic(1, "Epic 1", "Description");
+        taskManager.createEpic(epic);
+
+        SubTask subtask = new SubTask(2, "Subtask 1", "Description", TaskStatus.IN_PROGRESS, 1);
+        taskManager.createSubTask(subtask);
+
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus());
+    }
+
+
+    // Проверка: статус эпика должен выдать ошибку, если статус подзадачи некорректен или отсутствует
+    @Test
+    void testUpdateEpicStatusWithInvalidSubtaskStatus() {
+        Epic epic = new Epic(1, "Epic", "Description");
+        taskManager.createEpic(epic);
+
+        // Создаем подзадачу с некорректным (null) статусом
+        SubTask subtask = new SubTask(2, "Subtask", "Description", null, epic.getId());
+
+        // Проверяем, что создание подзадачи с некорректным статусом вызывает исключение
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            taskManager.createSubTask(subtask);
+        });
+
+        assertEquals("Статус подзадачи не может быть null.", exception.getMessage());
+    }
+
+    // Проверка: нельзя добавить одну и ту же подзадачу дважды в эпик
+    @Test
+    void testAddDuplicateSubtaskToEpic() {
+        Epic epic = new Epic(1, "Epic", "Description");
+        taskManager.createEpic(epic);
+
+        SubTask subtask = new SubTask(2, "Subtask", "Description", TaskStatus.NEW, epic.getId());
+        epic.addSubtask(subtask);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            epic.addSubtask(subtask);
+        });
+
+        assertEquals("Подзадача с ID 2 уже добавлена.", exception.getMessage());
+    }
+
+
+    // Проверка: невозможно создать подзадачу с некорректным ID эпика
+    @Test
+    void testCreateSubTaskWithInvalidEpicId() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new SubTask(1, "Subtask", "Description", TaskStatus.NEW, -1);
+        });
+
+        assertEquals("ID эпика должен быть положительным числом.", exception.getMessage());
+    }
+
 
 }

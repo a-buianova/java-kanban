@@ -12,9 +12,15 @@ public class Epic extends Task implements Cloneable {
     }
 
     public void addSubtask(SubTask subtask) {
-        if (subtask != null) {
-            subtasks.add(subtask);
+        if (subtask == null) {
+            throw new IllegalArgumentException("Подзадача не может быть null.");
         }
+
+        if (subtasks.contains(subtask)) {
+            throw new IllegalArgumentException("Подзадача с ID " + subtask.getId() + " уже добавлена.");
+        }
+
+        subtasks.add(subtask);
     }
 
     public List<SubTask> getSubtasks() {

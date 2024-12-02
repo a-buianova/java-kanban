@@ -26,6 +26,10 @@ public class Task implements Cloneable {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getDescription() {
         return description;
     }
