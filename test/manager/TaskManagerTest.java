@@ -169,15 +169,12 @@ class TaskManagerTest {
         Epic epic = new Epic(1, "Epic", "Description");
         taskManager.createEpic(epic);
 
-        // Создаем подзадачу с некорректным (null) статусом
-        SubTask subtask = new SubTask(2, "Subtask", "Description", null, epic.getId());
-
         // Проверяем, что создание подзадачи с некорректным статусом вызывает исключение
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            taskManager.createSubTask(subtask);
+            taskManager.createSubTask(new SubTask(2, "Subtask", "Description", null, epic.getId()));
         });
 
-        assertEquals("Статус подзадачи не может быть null.", exception.getMessage());
+        assertEquals("Статус задачи не может быть null.", exception.getMessage());
     }
 
     // Проверка: нельзя добавить одну и ту же подзадачу дважды в эпик

@@ -8,6 +8,16 @@ public class Task implements Cloneable {
     protected TaskStatus status;
 
     public Task(int id, String title, String description, TaskStatus status) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Заголовок не может быть пустым или null.");
+        }
+        if (description == null) {
+            throw new IllegalArgumentException("Описание не может быть null.");
+        }
+        if (status == null) {
+            throw new IllegalArgumentException("Статус задачи не может быть null.");
+        }
+
         this.id = id;
         this.title = title;
         this.description = description;
@@ -27,6 +37,9 @@ public class Task implements Cloneable {
     }
 
     public void setTitle(String title) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Заголовок не может быть пустым или null.");
+        }
         this.title = title;
     }
 
@@ -34,11 +47,21 @@ public class Task implements Cloneable {
         return description;
     }
 
+    public void setDescription(String description) {
+        if (description == null) {
+            throw new IllegalArgumentException("Описание не может быть null.");
+        }
+        this.description = description;
+    }
+
     public TaskStatus getStatus() {
         return status;
     }
 
     public void setStatus(TaskStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Статус задачи не может быть null.");
+        }
         this.status = status;
     }
 

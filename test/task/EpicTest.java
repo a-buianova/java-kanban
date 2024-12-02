@@ -31,8 +31,6 @@ class EpicTest {
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
         taskManager.createSubTask(subtask);
 
-        epic.addSubtask(subtask);
-
         assertNotNull(epic.getSubtasks());
         assertTrue(epic.getSubtasks().contains(subtask));
     }
@@ -70,9 +68,6 @@ class EpicTest {
 
         taskManager.createSubTask(subtask1);
         taskManager.createSubTask(subtask2);
-
-        epic.addSubtask(subtask1);
-        epic.addSubtask(subtask2);
 
         assertEquals(TaskStatus.DONE, epic.getStatus()); // Статус эпика должен быть DONE, так как все подзадачи выполнены
     }

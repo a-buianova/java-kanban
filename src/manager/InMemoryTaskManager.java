@@ -37,6 +37,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public SubTask createSubTask(SubTask subtask) {
+        subtask.setId(++idCounter);
         validateUniqueId(subtask.getId());
 
         if (subtask.getStatus() == null) {
@@ -47,7 +48,6 @@ public class InMemoryTaskManager implements TaskManager {
             throw new IllegalArgumentException("Эпик с ID " + subtask.getEpicId() + " не найден.");
         }
 
-        subtask.setId(++idCounter);
         subtasks.put(subtask.getId(), subtask);
         epics.get(subtask.getEpicId()).addSubtask(subtask);
 
@@ -62,7 +62,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
 
         subtasks.put(subtask.getId(), subtask);
-        epics.get(subtask.getEpicId()).addSubtask(subtask);
         updateEpicStatus(subtask.getEpicId());
         return subtask;
     }
@@ -153,12 +152,22 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getTasksSortedByStatus() {
-        return List.of();
+        return tasks.values().stream()
+                .sorted(Comparator.comparing(Task::getStatus))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<SubTask> getSubtasksSortedByStatus(int epicId) {
-        return List.of();
+        Epic epic = epics.get(epicId);
+
+        if (epic == null) {
+            throw new IllegalArgumentException("Эпик с ID " + epicId + " не найден.");
+        }
+
+        return epic.getSubtasks().stream()
+                .sorted(Comparator.comparing(SubTask::getStatus))
+                .collect(Collectors.toList());
     }
 
     @Override
