@@ -16,21 +16,21 @@ public class Main {
         manager.createEpic(epic1);
         manager.createEpic(epic2);
 
-        SubTask subTask1_1 = new SubTask(101, "Забронировать ресторан", "Найти и забронировать ресторан", TaskStatus.NEW, epic1.getId());
-        SubTask subTask1_2 = new SubTask(102, "Отправить приглашения", "Разослать пригласительные", TaskStatus.NEW, epic1.getId());
-        SubTask subTask2_1 = new SubTask(103, "Приготовить торт", "Испечь торт", TaskStatus.NEW, epic2.getId());
+        SubTask epicOneTaskOne = new SubTask(101, "Забронировать ресторан", "Найти и забронировать ресторан", TaskStatus.NEW, epic1.getId());
+        SubTask epicOneTaskTwo = new SubTask(102, "Отправить приглашения", "Разослать пригласительные", TaskStatus.NEW, epic1.getId());
+        SubTask epicTwoTaskOne = new SubTask(103, "Приготовить торт", "Испечь торт", TaskStatus.NEW, epic2.getId());
 
-        manager.createSubTask(subTask1_1);
-        manager.createSubTask(subTask1_2);
-        manager.createSubTask(subTask2_1);
+        manager.createSubTask(epicOneTaskOne);
+        manager.createSubTask(epicOneTaskTwo);
+        manager.createSubTask(epicTwoTaskOne);
 
         System.out.println("Список эпиков: " + manager.getAllEpics());
 
-        subTask2_1.setStatus(TaskStatus.DONE);
-        manager.updateSubTask(subTask2_1);
+        epicTwoTaskOne.setStatus(TaskStatus.DONE);
+        manager.updateSubTask(epicTwoTaskOne);
         System.out.println("Статус эпика 2 после изменения подзадачи: " + epic2.getStatus());
 
-        manager.deleteSubtask(subTask1_1.getId());
+        manager.deleteSubtask(epicOneTaskOne.getId());
         System.out.println("Статус эпика 1 после удаления подзадачи: " + epic1.getStatus());
 
         System.out.println("Список задач после удаления подзадачи: " + manager.getAllTasks());
