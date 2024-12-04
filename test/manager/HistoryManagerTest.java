@@ -89,7 +89,7 @@ class HistoryManagerTest {
         taskManager.getSubtask(subTask1.getId());
         taskManager.getSubtask(subTask2.getId());
 
-        taskManager.removeEpic(epic.getId());
+        taskManager.deleteEpic(epic.getId());
 
         List<Task> history = taskManager.getHistory();
         assertTrue(history.isEmpty(), "История должна быть пустой после удаления эпика и всех его подзадач.");
