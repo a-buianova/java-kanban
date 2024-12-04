@@ -3,7 +3,7 @@ package task;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Epic extends Task {
+public class Epic extends Task implements Cloneable {
     private List<SubTask> subtasks;
 
     public Epic(int id, String title, String description) {
@@ -12,13 +12,36 @@ public class Epic extends Task {
     }
 
     public void addSubtask(SubTask subtask) {
-        if (subtask != null) {
-            subtasks.add(subtask);
+        if (subtask == null) {
+            throw new IllegalArgumentException("Подзадача не может быть null.");
         }
+
+        if (subtasks.contains(subtask)) {
+            throw new IllegalArgumentException("Подзадача с ID " + subtask.getId() + " уже добавлена.");
+        }
+
+        subtasks.add(subtask);
     }
 
     public List<SubTask> getSubtasks() {
         return new ArrayList<>(subtasks);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Epic epic = (Epic) o;
+        return subtasks.equals(epic.subtasks);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + subtasks.hashCode();
+        return result;
     }
 
     @Override
@@ -30,5 +53,14 @@ public class Epic extends Task {
                 ", status=" + getStatus() +
                 ", subtasks=" + subtasks +
                 '}';
+    }
+
+    @Override
+    public Epic clone() {
+        Epic clone = (Epic) super.clone();
+        for (SubTask subtask : this.subtasks) {
+            clone.addSubtask(subtask.clone());
+        }
+        return clone;
     }
 }

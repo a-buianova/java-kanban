@@ -12,50 +12,46 @@ class SubTaskTest {
 
     @BeforeEach
     void setUp() {
-        taskManager = new InMemoryTaskManager(); // Инициализация TaskManager
+        taskManager = new InMemoryTaskManager();
     }
 
-    // 1. Проверка, что подзадача не может быть своим собственным эпиком
+    // Проверка, что подзадача не может быть своим собственным эпиком
     @Test
     void testSubtaskCannotBeItsOwnEpic() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
 
-        // Создание подзадачи с ID эпика
-        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
+        SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, 1);
 
-        // Подзадача не может быть своим эпиком
         assertThrows(IllegalArgumentException.class, () -> taskManager.createSubTask(subtask));
     }
 
-    // 2. Проверка, что можно создать подзадачу с правильным статусом
+    //Проверка, что можно создать подзадачу с правильным статусом
     @Test
     void testCreateSubtaskWithCorrectStatus() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
 
-        taskManager.createSubTask(subtask);
-        assertNotNull(taskManager.getSubtask(subtask.getId())); // Подзадача должна быть добавлена в менеджер
-        assertEquals(TaskStatus.NEW, taskManager.getSubtask(subtask.getId()).getStatus()); // Статус должен быть NEW
+        SubTask createdSubtask = taskManager.createSubTask(subtask);
+        assertNotNull(taskManager.getSubtask(createdSubtask.getId())); // Подзадача должна быть добавлена в менеджер
+        assertEquals(TaskStatus.NEW, taskManager.getSubtask(createdSubtask.getId()).getStatus()); // Статус должен быть NEW
     }
 
-    // 3. Проверка, что можно обновить статус подзадачи
+    //Проверка, что можно обновить статус подзадачи
     @Test
     void testUpdateSubtaskStatus() {
         Epic epic = new Epic(1, "Epic 1", "Description");
         taskManager.createEpic(epic);
 
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask);
+        SubTask createdSubTask = taskManager.createSubTask(subtask);
 
-        subtask.setStatus(TaskStatus.IN_PROGRESS);
-        taskManager.updateSubTask(subtask);
+        createdSubTask.setStatus(TaskStatus.IN_PROGRESS);
+        taskManager.updateSubTask(createdSubTask);
 
-        assertEquals(TaskStatus.IN_PROGRESS, taskManager.getSubtask(subtask.getId()).getStatus()); // Статус подзадачи должен быть обновлен на IN_PROGRESS
+        assertEquals(TaskStatus.IN_PROGRESS, taskManager.getSubtask(createdSubTask.getId()).getStatus()); // Статус подзадачи должен быть обновлен на IN_PROGRESS
     }
 
-    // 4. Проверка, что подзадача имеет правильный статус после удаления
+    //Проверка, что подзадача имеет правильный статус после удаления
     @Test
     void testDeleteSubtask() {
         Epic epic = new Epic(1, "Epic 1", "Description");
@@ -68,7 +64,7 @@ class SubTaskTest {
         assertNull(taskManager.getSubtask(subtask.getId())); // Подзадача должна быть удалена
     }
 
-    // 5. Проверка, что не может быть создана подзадача с несуществующим эпиком
+    //Проверка, что не может быть создана подзадача с несуществующим эпиком
     @Test
     void testCreateSubtaskWithNonExistentEpic() {
         SubTask subtask = new SubTask(1, "Subtask 1", "Description", TaskStatus.NEW, 99); // Не существует эпика с таким ID
@@ -76,7 +72,7 @@ class SubTaskTest {
         assertThrows(IllegalArgumentException.class, () -> taskManager.createSubTask(subtask)); // Должна быть ошибка при попытке создать подзадачу
     }
 
-    // 6. Проверка, что при удалении эпика, все его подзадачи удаляются
+    //Проверка, что при удалении эпика, все его подзадачи удаляются
     @Test
     void testDeleteEpicRemovesSubtasks() {
         Epic epic = new Epic(1, "Epic 1", "Description");
