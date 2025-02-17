@@ -1,10 +1,15 @@
 package manager;
 
-import task.*;
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import task.Epic;
+import task.SubTask;
+import task.Task;
+import task.TaskStatus;
 
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class HistoryManagerTest {
 
@@ -13,105 +18,151 @@ class HistoryManagerTest {
 
     @BeforeEach
     void setUp() {
-        this.historyManager = Managers.getDefaultHistory(); // Получаем экземпляр HistoryManager через утилиту
-        this.taskManager = new InMemoryTaskManager(); // Инициализация TaskManager
+        historyManager = new InMemoryHistoryManager();
+        taskManager = new InMemoryTaskManager();
     }
 
-    @AfterEach
-    void tearDown() {
-        this.historyManager = null; // Очищаем менеджер истории
-        this.taskManager = null; // Очищаем TaskManager
-    }
-
-    // 1. Проверка, что задача добавляется в историю
+    // Проверка: задача успешно добавляется в историю
     @Test
     void testAddTaskToHistory() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.getTask(1); // Задача должна попасть в историю
+        historyManager.add(task);
 
-        List<Task> history = taskManager.getHistory();
-        assertNotNull(history);
-        assertEquals(1, history.size()); // Должна быть одна задача в истории
-        assertEquals(task.getId(), history.get(0).getId()); // Задача в истории должна быть такой же
+        List<Task> history = historyManager.getHistory();
+        assertNotNull(history, "История не должна быть null после добавления задачи.");
+        assertEquals(1, history.size(), "История должна содержать одну задачу.");
+        assertEquals(task.getId(), history.get(0).getId(), "ID задачи в истории должен совпадать с добавленной задачей.");
     }
 
-    // 2. Проверка, что задача в истории не удаляется при новом добавлении
+    // Проверка: дублирующиеся задачи не добавляются в историю
     @Test
-    void testHistoryKeepsTaskAfterAccess() {
+    void testNoDuplicateTasksInHistory() {
+        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        historyManager.add(task);
+        historyManager.add(task);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать только одну задачу, несмотря на повторное добавление.");
+    }
+
+    // Проверка: задача успешно удаляется из истории
+    @Test
+    void testRemoveTaskFromHistory() {
         Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         Task task2 = new Task(2, "Task 2", "Description", TaskStatus.NEW);
 
-        taskManager.createTask(task1);
-        taskManager.createTask(task2);
+        historyManager.add(task1);
+        historyManager.add(task2);
 
-        taskManager.getTask(1); // Задача 1 должна попасть в историю
-        taskManager.getTask(2); // Задача 2 должна попасть в историю
+        historyManager.remove(1); // Удаляем первую задачу
 
-        List<Task> history = taskManager.getHistory();
-        assertEquals(2, history.size()); // В истории должно быть две задачи
-        assertTrue(history.contains(task1)); // Задача 1 должна быть в истории
-        assertTrue(history.contains(task2)); // Задача 2 должна быть в истории
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать одну задачу после удаления.");
+        assertEquals(task2.getId(), history.get(0).getId(), "ID оставшейся задачи должен совпадать с второй задачей.");
     }
 
-    // 3. Проверка на то, что задачи в истории отсортированы по порядку
+    // Проверка: удаление несуществующей задачи не влияет на историю
     @Test
-    void testHistoryTaskOrder() {
+    void testRemoveNonExistentTaskDoesNothing() {
+        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        historyManager.add(task);
+
+        historyManager.remove(999); // Пытаемся удалить задачу с несуществующим ID
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История не должна измениться при удалении несуществующей задачи.");
+    }
+
+    // Проверка: эпик и все его подзадачи удаляются из истории при удалении эпика
+    @Test
+    void testEpicDeletionRemovesSubtasksFromHistory() {
+        Epic epic = new Epic(1, "Epic 1", "Description");
+        taskManager.createEpic(epic);
+
+        SubTask subTask1 = new SubTask(2, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
+        SubTask subTask2 = new SubTask(3, "Subtask 2", "Description", TaskStatus.NEW, epic.getId());
+
+        taskManager.createSubTask(subTask1);
+        taskManager.createSubTask(subTask2);
+
+        taskManager.getEpic(epic.getId());
+        taskManager.getSubtask(subTask1.getId());
+        taskManager.getSubtask(subTask2.getId());
+
+        taskManager.deleteEpic(epic.getId());
+
+        List<Task> history = taskManager.getHistory();
+        assertTrue(history.isEmpty(), "История должна быть пустой после удаления эпика и всех его подзадач.");
+    }
+
+    // Проверка: история возвращает пустой список, если задачи не добавлены
+    @Test
+    void testEmptyHistory() {
+        List<Task> history = historyManager.getHistory();
+        assertNotNull(history, "История не должна быть null.");
+        assertTrue(history.isEmpty(), "История должна быть пустой, если задачи не добавлены.");
+    }
+
+    // Проверка: удаление первого элемента из истории
+    @Test
+    void testRemoveFirstTaskFromHistory() {
         Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
         Task task2 = new Task(2, "Task 2", "Description", TaskStatus.NEW);
 
-        taskManager.createTask(task1);
-        taskManager.createTask(task2);
+        historyManager.add(task1);
+        historyManager.add(task2);
 
-        taskManager.getTask(1);
-        taskManager.getTask(2);
+        historyManager.remove(task1.getId()); // Удаляем первую задачу
 
-        List<Task> history = taskManager.getHistory();
-        assertEquals(task1, history.get(0)); // Задача 1 должна быть первой в истории
-        assertEquals(task2, history.get(1)); // Задача 2 должна быть второй в истории
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать одну задачу после удаления первой задачи.");
+        assertEquals(task2.getId(), history.get(0).getId(), "Первая задача должна быть удалена.");
     }
 
-    // 4. Проверка на хранение не более 10 задач в истории
+    // Проверка: удаление последнего элемента из истории
     @Test
-    void testHistorySizeLimit() {
-        for (int i = 1; i <= 15; i++) {
-            Task task = new Task(i, "Task " + i, "Description", TaskStatus.NEW);
-            taskManager.createTask(task);
-            taskManager.getTask(i); // Все задачи должны попасть в историю
-        }
+    void testRemoveLastTaskFromHistory() {
+        Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        Task task2 = new Task(2, "Task 2", "Description", TaskStatus.NEW);
 
-        List<Task> history = taskManager.getHistory();
-        assertEquals(10, history.size()); // История должна содержать не более 10 задач
-        assertEquals(6, history.get(0).getId()); // Задача с id 6 должна быть первой в истории
-        assertEquals(15, history.get(9).getId()); // Задача с id 15 должна быть последней в истории
+        historyManager.add(task1);
+        historyManager.add(task2);
+
+        historyManager.remove(task2.getId()); // Удаляем последнюю задачу
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать одну задачу после удаления последней задачи.");
+        assertEquals(task1.getId(), history.get(0).getId(), "Последняя задача должна быть удалена.");
     }
 
-    // 5. Проверка, что изменения задачи сохраняются в истории
+    // Проверка: порядок задач сохраняется
     @Test
-    void testTaskUpdateHistory() {
+    void testOrderOfTasksInHistory() {
+        Task task1 = new Task(1, "Task 1", "Description", TaskStatus.NEW);
+        Task task2 = new Task(2, "Task 2", "Description", TaskStatus.NEW);
+        Task task3 = new Task(3, "Task 3", "Description", TaskStatus.NEW);
+
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task3);
+
+        List<Task> history = historyManager.getHistory();
+        assertEquals(3, history.size(), "История должна содержать три задачи.");
+        assertEquals(task1.getId(), history.get(0).getId(), "Первая задача должна быть первой в истории.");
+        assertEquals(task2.getId(), history.get(1).getId(), "Вторая задача должна быть второй в истории.");
+        assertEquals(task3.getId(), history.get(2).getId(), "Третья задача должна быть третьей в истории.");
+    }
+
+    // Проверка: история корректно обрабатывает один элемент
+    @Test
+    void testSingleTaskInHistory() {
         Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-        taskManager.getTask(1); // Задача 1 добавлена в историю
 
-        task.setStatus(TaskStatus.IN_PROGRESS);
-        taskManager.updateSubTask((SubTask) task);  // Теперь мы обновляем задачу, а не приводим её к SubTask
+        historyManager.add(task);
 
-        taskManager.getTask(1); // Повторный доступ к задаче
-
-        List<Task> history = taskManager.getHistory();
-        assertEquals(2, history.size()); // В истории две версии задачи
-        assertEquals(TaskStatus.NEW, history.get(0).getStatus()); // Первая версия задачи имеет статус NEW
-        assertEquals(TaskStatus.IN_PROGRESS, history.get(1).getStatus()); // Вторая версия задачи имеет статус IN_PROGRESS
+        List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "История должна содержать одну задачу.");
+        assertEquals(task.getId(), history.get(0).getId(), "ID задачи в истории должен совпадать с добавленной задачей.");
     }
 
-    // 6. Проверка, что задачи не добавляются в историю, если они не были получены
-    @Test
-    void testNoTaskInHistoryIfNotAccessed() {
-        Task task = new Task(1, "Task 1", "Description", TaskStatus.NEW);
-        taskManager.createTask(task);
-
-        // Задача не была получена, поэтому она не должна быть в истории
-        List<Task> history = taskManager.getHistory();
-        assertTrue(history.isEmpty());
-    }
 }
