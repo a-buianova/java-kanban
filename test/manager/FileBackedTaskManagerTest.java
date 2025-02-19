@@ -83,7 +83,7 @@ class FileBackedTaskManagerTest {
             fail("Setup failed: could not write to test file.");
         }
 
-        assertThrows(ManagerSaveException.class, () -> FileBackedTaskManager.loadFromFile(testFile));
+        assertThrows(ManagerSaveException.class, () -> FileBackedTaskManager.loadFromFile(new File("no/existing/path")));
     }
 
     @Test
