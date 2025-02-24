@@ -14,7 +14,7 @@ public class TaskConverter {
                 epicId);
     }
 
-    public static Task CSVtoTask(String line) {
+    public static Task csvToTask(String line) {
         String[] fields = line.split(",");
 
         if (fields.length < 5) {
