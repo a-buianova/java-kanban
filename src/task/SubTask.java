@@ -1,54 +1,50 @@
 package task;
 
-public class SubTask extends Task implements Cloneable {
+import java.util.Objects;
+
+public class SubTask extends Task {
     private int epicId;
 
     public SubTask(int id, String title, String description, TaskStatus status, int epicId) {
         super(id, title, description, status);
-
-        if (epicId <= 0) {
-            throw new IllegalArgumentException("ID эпика должен быть положительным числом.");
+        if (id == epicId) {
+            throw new IllegalArgumentException("Подзадача не может быть своим собственным эпиком.");
         }
-
-        this.epicId = epicId;
+        setEpicId(epicId);
     }
 
     public int getEpicId() {
         return epicId;
     }
 
+    public void setEpicId(int epicId) {
+        if (epicId <= 0) {
+            throw new IllegalArgumentException("ID эпика должен быть положительным числом.");
+        }
+        this.epicId = epicId;
+    }
+
+    @Override
+    public TaskType getType() {
+        return TaskType.SUBTASK;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof SubTask)) return false;
         if (!super.equals(o)) return false;
-
         SubTask subTask = (SubTask) o;
         return epicId == subTask.epicId;
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + epicId;
-        return result;
+        return Objects.hash(super.hashCode(), epicId);
     }
 
     @Override
     public String toString() {
-        return "SubTask{" +
-                "id=" + getId() +
-                ", title='" + getTitle() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
-                ", epicId=" + epicId +
-                '}';
-    }
-
-
-
-    @Override
-    public SubTask clone() {
-        return (SubTask) super.clone();
+        return super.toString() + ", epicId=" + epicId;
     }
 }

@@ -2,9 +2,7 @@ package manager;
 
 import task.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class InMemoryHistoryManager implements HistoryManager {
     private static class Node {
@@ -25,13 +23,11 @@ public class InMemoryHistoryManager implements HistoryManager {
     public void add(Task task) {
         if (task == null) return;
 
-        // Удаляем существующую задачу из истории
-        if (nodeMap.containsKey(task.getId())) {
-            removeNode(nodeMap.get(task.getId()));
-        }
+        // Удаляем задачу, если она уже есть в истории
+        remove(task.getId());
 
         // Добавляем задачу в конец списка
-        Node newNode = linkLast(task);
+        Node newNode = addLast(task);
         nodeMap.put(task.getId(), newNode);
     }
 
@@ -48,13 +44,19 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void remove(int id) {
-        if (nodeMap.containsKey(id)) {
-            removeNode(nodeMap.get(id));
-            nodeMap.remove(id);
+        Node node = nodeMap.remove(id);
+        if (node != null) {
+            removeNode(node);
         }
     }
 
-    private Node linkLast(Task task) {
+    public void clear() {
+        nodeMap.clear();
+        head = null;
+        tail = null;
+    }
+
+    private Node addLast(Task task) {
         Node newNode = new Node(task);
         if (tail == null) {
             head = newNode;
@@ -81,6 +83,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         } else {
             tail = node.prev;
         }
+
         node.prev = null;
         node.next = null;
     }
