@@ -13,6 +13,10 @@ public class SubTask extends Task {
         setEpicId(epicId);
     }
 
+    public SubTask(String title, String description, TaskStatus status, int epicId) {
+        this(0, title, description, status, epicId);
+    }
+
     public int getEpicId() {
         return epicId;
     }

@@ -31,8 +31,8 @@ class SubTaskTest {
         SubTask subtask = new SubTask(2, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
         SubTask createdSubtask = taskManager.createSubTask(subtask);
 
-        assertNotNull(taskManager.getSubtask(createdSubtask.getId()), "Подзадача должна быть добавлена в менеджер");
-        assertEquals(TaskStatus.NEW, taskManager.getSubtask(createdSubtask.getId()).getStatus(), "Статус подзадачи должен быть NEW");
+        assertNotNull(taskManager.getSubtaskById(createdSubtask.getId()), "Подзадача должна быть добавлена в менеджер");
+        assertEquals(TaskStatus.NEW, taskManager.getSubtaskById(createdSubtask.getId()).getStatus(), "Статус подзадачи должен быть NEW");
     }
 
     // Проверка, что можно обновить статус подзадачи
@@ -45,9 +45,9 @@ class SubTaskTest {
         SubTask createdSubTask = taskManager.createSubTask(subtask);
 
         createdSubTask.setStatus(TaskStatus.IN_PROGRESS);
-        taskManager.updateSubTask(createdSubTask);
+        taskManager.updateSubtask(createdSubTask);
 
-        assertEquals(TaskStatus.IN_PROGRESS, taskManager.getSubtask(createdSubTask.getId()).getStatus(),
+        assertEquals(TaskStatus.IN_PROGRESS, taskManager.getSubtaskById(createdSubTask.getId()).getStatus(),
                 "Статус подзадачи должен быть обновлен на IN_PROGRESS");
     }
 
@@ -61,7 +61,7 @@ class SubTaskTest {
         taskManager.createSubTask(subtask);
 
         taskManager.deleteSubtask(subtask.getId());
-        assertNull(taskManager.getSubtask(subtask.getId()), "Подзадача должна быть удалена");
+        assertNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача должна быть удалена");
     }
 
     // Проверка, что нельзя создать подзадачу с несуществующим эпиком
@@ -83,6 +83,6 @@ class SubTaskTest {
         taskManager.createSubTask(subtask);
 
         taskManager.deleteEpic(epic.getId());
-        assertNull(taskManager.getSubtask(subtask.getId()), "Подзадача должна быть удалена вместе с эпиком");
+        assertNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача должна быть удалена вместе с эпиком");
     }
 }

@@ -16,15 +16,13 @@ public interface TaskManager {
 
     void updateEpic(Epic epic);
 
-    void updateSubTask(SubTask subtask);
+    void updateSubtask(SubTask subtask);
 
-    void updateEpicStatus(int epicId);
+    Task getTaskById(int id);
 
-    Task getTask(int id);
+    Epic getEpicById(int id);
 
-    Epic getEpic(int id);
-
-    SubTask getSubtask(int id);
+    SubTask getSubtaskById(int id);
 
     void deleteTask(int id);
 
@@ -33,10 +31,6 @@ public interface TaskManager {
     void deleteSubtask(int id);
 
     List<SubTask> getSubtasksForEpic(int epicId);
-
-    List<Task> getTasksSortedByStatus();
-
-    List<SubTask> getSubtasksSortedByStatus(int epicId);
 
     List<Task> getAllTasks();
 
