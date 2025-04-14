@@ -4,16 +4,30 @@ import task.*;
 
 import java.util.*;
 
+/**
+ * Изменения согласно ревью:
+ * 1. Коллекции tasks, epics, subtasks объявлены как protected для удобства наследования.
+ * 2. Добавлено поле historyManager, получаемое через Managers.getDefaultHistory().
+ * 3. Введено поле nextId для синхронизации при загрузке данных, используется в generateId().
+ * 4. В методе createSubTask происходит проверка наличия соответствующего эпика для подзадачи.
+ */
 public class InMemoryTaskManager implements TaskManager {
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, SubTask> subtasks = new HashMap<>();
+
     protected final HistoryManager historyManager = Managers.getDefaultHistory();
-    private int idCounter = 1;
+
     protected int nextId = 1;
 
     protected int generateId() {
-        return idCounter++;
+        return nextId++;
+    }
+
+    protected void updateNextIdIfNecessary(int id) {
+        if (this.nextId <= id) {
+            this.nextId = id + 1;
+        }
     }
 
     @Override
@@ -37,7 +51,6 @@ public class InMemoryTaskManager implements TaskManager {
         if (!epics.containsKey(subtask.getEpicId())) {
             throw new IllegalArgumentException("Эпик с ID " + subtask.getEpicId() + " не существует.");
         }
-
         int id = generateId();
         subtask.setId(id);
         subtasks.put(id, subtask);
@@ -45,7 +58,6 @@ public class InMemoryTaskManager implements TaskManager {
         Epic epic = epics.get(subtask.getEpicId());
         epic.addSubtask(id);
         updateEpicStatus(epic.getId());
-
         return subtask;
     }
 
@@ -75,21 +87,27 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
-        if (task != null) historyManager.add(task);
+        if (task != null) {
+            historyManager.add(task);
+        }
         return task;
     }
 
     @Override
     public Epic getEpicById(int id) {
         Epic epic = epics.get(id);
-        if (epic != null) historyManager.add(epic);
+        if (epic != null) {
+            historyManager.add(epic);
+        }
         return epic;
     }
 
     @Override
     public SubTask getSubtaskById(int id) {
         SubTask subtask = subtasks.get(id);
-        if (subtask != null) historyManager.add(subtask);
+        if (subtask != null) {
+            historyManager.add(subtask);
+        }
         return subtask;
     }
 
@@ -208,8 +226,12 @@ public class InMemoryTaskManager implements TaskManager {
             if (sub == null) continue;
 
             TaskStatus status = sub.getStatus();
-            if (status != TaskStatus.NEW) allNew = false;
-            if (status != TaskStatus.DONE) allDone = false;
+            if (status != TaskStatus.NEW) {
+                allNew = false;
+            }
+            if (status != TaskStatus.DONE) {
+                allDone = false;
+            }
         }
 
         if (allDone) {
@@ -220,11 +242,4 @@ public class InMemoryTaskManager implements TaskManager {
             epic.setStatus(TaskStatus.IN_PROGRESS);
         }
     }
-
-    protected void updateNextIdIfNecessary(int id) {
-        if (this.nextId <= id) {
-            this.nextId = id + 1;
-        }
-    }
-
 }

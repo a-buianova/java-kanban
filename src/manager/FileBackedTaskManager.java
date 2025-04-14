@@ -6,6 +6,13 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 
+/**
+ * Изменения согласно ревью:
+ * 1. Методы createTask, createEpic, createSubTask, update*, delete* делегируют выполнение
+ *    базовой логики InMemoryTaskManager, а затем вызывают метод save() для сохранения состояния.
+ * 2. Проверка существования эпика для подзадачи теперь выполняется в InMemoryTaskManager,
+ *    поэтому избыточный код удалён
+ *    **/
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final Path filePath;
 
@@ -29,9 +36,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     @Override
     public SubTask createSubTask(SubTask subTask) {
-        if (!epics.containsKey(subTask.getEpicId())) {
-            throw new IllegalArgumentException("Эпик с ID " + subTask.getEpicId() + " не найден.");
-        }
+        // Избыточная проверка на существование эпика удалена,
+        // поскольку логика обработки подзадач реализована в InMemoryTaskManager.
         SubTask createdSubTask = super.createSubTask(subTask);
         save();
         return createdSubTask;
@@ -121,12 +127,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
             String header = reader.readLine();
 
-            // ✅ Разрешаем пустой файл
             if (header == null || header.isBlank()) {
                 return manager;
             }
 
-            // ✅ Проверяем корректность заголовка
             if (!header.equals("id,type,name,status,description,epic")) {
                 throw new ManagerSaveException("Неверный формат заголовка файла.");
             }
@@ -162,7 +166,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
                 manager.updateNextIdIfNecessary(task.getId());
             }
-
         } catch (IOException | IllegalArgumentException e) {
             throw new ManagerSaveException("Ошибка при загрузке из файла: " + e.getMessage(), e);
         }
