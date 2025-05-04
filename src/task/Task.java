@@ -1,27 +1,22 @@
 package task;
 
-public class Task implements Cloneable {
+import java.util.Objects;
 
+public class Task implements Cloneable {
     protected int id;
     protected String title;
     protected String description;
     protected TaskStatus status;
 
     public Task(int id, String title, String description, TaskStatus status) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Заголовок не может быть пустым или null.");
-        }
-        if (description == null) {
-            throw new IllegalArgumentException("Описание не может быть null.");
-        }
-        if (status == null) {
-            throw new IllegalArgumentException("Статус задачи не может быть null.");
-        }
-
+        setTitle(title);
+        setDescription(description);
+        setStatus(status);
         this.id = id;
-        this.title = title;
-        this.description = description;
-        this.status = status;
+    }
+
+    public Task(String title, String description) {
+        this(0, title, description, TaskStatus.NEW);
     }
 
     public int getId() {
@@ -65,22 +60,24 @@ public class Task implements Cloneable {
         this.status = status;
     }
 
+    public TaskType getType() {
+        return TaskType.TASK;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof Task)) return false;
         Task task = (Task) o;
-        return id == task.id && title.equals(task.title) && description.equals(task.description) && status == task.status;
+        return id == task.id &&
+                Objects.equals(title, task.title) &&
+                Objects.equals(description, task.description) &&
+                status == task.status;
     }
 
     @Override
     public int hashCode() {
-        int result = id;
-        result = 31 * result + title.hashCode();
-        result = 31 * result + description.hashCode();
-        result = 31 * result + status.hashCode();
-        return result;
+        return Objects.hash(id, title, description, status);
     }
 
     @Override
@@ -98,7 +95,7 @@ public class Task implements Cloneable {
         try {
             return (Task) super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
+            throw new AssertionError("Клонирование не поддерживается", e);
         }
     }
 }

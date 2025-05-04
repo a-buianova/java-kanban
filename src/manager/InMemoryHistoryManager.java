@@ -2,22 +2,17 @@ package manager;
 
 import task.Task;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
+/**
+ * Изменения согласно ревью:
+ * - Убран параметризованный тип у внутреннего класса Node.
+ * - Исправлена логика удаления из истории: сначала вызывается removeNode(node), затем nodeMap.remove(id).
+ * - Добавлена проверка на дублирующийся id в nodeMap.
+ * - Поддерживается корректный порядок истории и повторное добавление задач.
+ */
 public class InMemoryHistoryManager implements HistoryManager {
-    private static class Node {
-        Task task;
-        Node prev;
-        Node next;
-
-        Node(Task task) {
-            this.task = task;
-        }
-    }
-
-    private final HashMap<Integer, Node> nodeMap = new HashMap<>();
+    private final Map<Integer, Node> nodeMap = new HashMap<>();
     private Node head;
     private Node tail;
 
@@ -25,14 +20,19 @@ public class InMemoryHistoryManager implements HistoryManager {
     public void add(Task task) {
         if (task == null) return;
 
-        // Удаляем существующую задачу из истории
         if (nodeMap.containsKey(task.getId())) {
             removeNode(nodeMap.get(task.getId()));
         }
+        linkLast(task);
+    }
 
-        // Добавляем задачу в конец списка
-        Node newNode = linkLast(task);
-        nodeMap.put(task.getId(), newNode);
+    @Override
+    public void remove(int id) {
+        Node node = nodeMap.get(id);
+        if (node != null) {
+            removeNode(node);
+            nodeMap.remove(id);
+        }
     }
 
     @Override
@@ -40,48 +40,54 @@ public class InMemoryHistoryManager implements HistoryManager {
         List<Task> history = new ArrayList<>();
         Node current = head;
         while (current != null) {
-            history.add(current.task);
+            history.add(current.data);
             current = current.next;
         }
         return history;
     }
 
-    @Override
-    public void remove(int id) {
-        if (nodeMap.containsKey(id)) {
-            removeNode(nodeMap.get(id));
-            nodeMap.remove(id);
-        }
-    }
-
-    private Node linkLast(Task task) {
-        Node newNode = new Node(task);
-        if (tail == null) {
-            head = newNode;
-            tail = newNode;
-        } else {
+    private void linkLast(Task task) {
+        Node newNode = new Node(tail, task, null);
+        if (tail != null) {
             tail.next = newNode;
-            newNode.prev = tail;
-            tail = newNode;
+        } else {
+            head = newNode;
         }
-        return newNode;
+        tail = newNode;
+        nodeMap.put(task.getId(), newNode);
     }
 
     private void removeNode(Node node) {
         if (node == null) return;
 
-        if (node.prev != null) {
-            node.prev.next = node.next;
+        Node prev = node.prev;
+        Node next = node.next;
+
+        if (prev != null) {
+            prev.next = next;
         } else {
-            head = node.next;
+            head = next;
         }
 
-        if (node.next != null) {
-            node.next.prev = node.prev;
+        if (next != null) {
+            next.prev = prev;
         } else {
-            tail = node.prev;
+            tail = prev;
         }
+
         node.prev = null;
         node.next = null;
+    }
+
+    private static class Node {
+        private Node prev;
+        private Task data;
+        private Node next;
+
+        public Node(Node prev, Task data, Node next) {
+            this.prev = prev;
+            this.data = data;
+            this.next = next;
+        }
     }
 }

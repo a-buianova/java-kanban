@@ -2,65 +2,61 @@ package task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class Epic extends Task implements Cloneable {
-    private List<SubTask> subtasks;
+public class Epic extends Task {
+    private final List<Integer> subtaskIds = new ArrayList<>();
 
     public Epic(int id, String title, String description) {
         super(id, title, description, TaskStatus.NEW);
-        this.subtasks = new ArrayList<>();
     }
 
-    public void addSubtask(SubTask subtask) {
-        if (subtask == null) {
-            throw new IllegalArgumentException("Подзадача не может быть null.");
-        }
-
-        if (subtasks.contains(subtask)) {
-            throw new IllegalArgumentException("Подзадача с ID " + subtask.getId() + " уже добавлена.");
-        }
-
-        subtasks.add(subtask);
+    public Epic(String title, String description) {
+        super(0, title, description, TaskStatus.NEW);
     }
 
-    public List<SubTask> getSubtasks() {
-        return new ArrayList<>(subtasks);
+    public List<Integer> getSubtaskIds() {
+        return new ArrayList<>(subtaskIds);
+    }
+
+    public void addSubtask(int subtaskId) {
+        if (!subtaskIds.contains(subtaskId)) {
+            subtaskIds.add(subtaskId);
+        } else {
+            throw new IllegalArgumentException("Подзадача с ID " + subtaskId + " уже добавлена.");
+        }
+    }
+
+    public void removeSubtask(int subtaskId) {
+        subtaskIds.remove((Integer) subtaskId);
+    }
+
+    // Новый метод для очистки списка подзадач
+    public void clearSubtasks() {
+        subtaskIds.clear();
+    }
+
+    @Override
+    public TaskType getType() {
+        return TaskType.EPIC;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", subtaskIds=" + subtaskIds;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Epic)) return false;
         if (!super.equals(o)) return false;
-
         Epic epic = (Epic) o;
-        return subtasks.equals(epic.subtasks);
+        return Objects.equals(subtaskIds, epic.subtaskIds);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + subtasks.hashCode();
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return "Epic{" +
-                "id=" + getId() +
-                ", title='" + getTitle() + '\'' +
-                ", description='" + getDescription() + '\'' +
-                ", status=" + getStatus() +
-                ", subtasks=" + subtasks +
-                '}';
-    }
-
-    @Override
-    public Epic clone() {
-        Epic clone = (Epic) super.clone();
-        for (SubTask subtask : this.subtasks) {
-            clone.addSubtask(subtask.clone());
-        }
-        return clone;
+        return Objects.hash(super.hashCode(), subtaskIds);
     }
 }
