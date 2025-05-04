@@ -1,30 +1,25 @@
 package task;
 
-import java.util.Objects;
 
-public class SubTask extends Task {
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+public class SubTask extends task.Task {
     private int epicId;
 
-    public SubTask(int id, String title, String description, TaskStatus status, int epicId) {
-        super(id, title, description, status);
-        if (id == epicId) {
-            throw new IllegalArgumentException("Подзадача не может быть своим собственным эпиком.");
-        }
-        setEpicId(epicId);
+    public SubTask(String name, String description, int epicId) {
+        super(name, description);
+        this.epicId = epicId;
     }
 
-    public SubTask(String title, String description, TaskStatus status, int epicId) {
-        this(0, title, description, status, epicId);
+    public SubTask(String name, String description, Duration duration, LocalDateTime startTime, int epicId) {
+        super(name, description, duration, startTime);
+        this.epicId = epicId;
     }
 
-    public int getEpicId() {
-        return epicId;
-    }
-
-    public void setEpicId(int epicId) {
-        if (epicId <= 0) {
-            throw new IllegalArgumentException("ID эпика должен быть положительным числом.");
-        }
+    public SubTask(String name, String description, TaskStatus status, Duration duration, LocalDateTime startTime, int epicId) {
+        super(name, description, duration, startTime);
+        this.status = status;
         this.epicId = epicId;
     }
 
@@ -33,22 +28,25 @@ public class SubTask extends Task {
         return TaskType.SUBTASK;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SubTask)) return false;
-        if (!super.equals(o)) return false;
-        SubTask subTask = (SubTask) o;
-        return epicId == subTask.epicId;
+    public int getEpicId() {
+        return epicId;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), epicId);
+    public void setEpicId(int epicId) {
+        this.epicId = epicId;
     }
 
     @Override
     public String toString() {
-        return super.toString() + ", epicId=" + epicId;
+        return "SubTask{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                ", epicId=" + epicId +
+                ", startTime=" + startTime +
+                ", duration=" + (duration != null ? duration.toMinutes() + "m" : "null") +
+                ", endTime=" + getEndTime() +
+                '}';
     }
 }
