@@ -2,20 +2,36 @@ package manager;
 
 import task.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class TaskConverter {
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public static String taskToCSV(Task task) {
         StringBuilder sb = new StringBuilder();
+
         sb.append(task.getId()).append(",");
         sb.append(task.getType()).append(",");
-        sb.append(task.getTitle()).append(",");
+        sb.append(task.getName()).append(",");
         sb.append(task.getStatus()).append(",");
         sb.append(task.getDescription()).append(",");
 
-        if (task.getType() == TaskType.SUBTASK) {
+        if (task instanceof SubTask) {
             sb.append(((SubTask) task).getEpicId());
-        } else {
-            sb.append("");
+        }
+
+        sb.append(",");
+
+        if (task.getStartTime() != null) {
+            sb.append(task.getStartTime().format(formatter));
+        }
+
+        sb.append(",");
+
+        if (task.getDuration() != null) {
+            sb.append(task.getDuration().toMinutes());
         }
 
         return sb.toString();
@@ -23,34 +39,45 @@ public class TaskConverter {
 
     public static Task taskFromCSV(String csvLine) {
         String[] fields = csvLine.split(",", -1);
-
-        if (fields.length < 5) {
-            throw new IllegalArgumentException("Недостаточно полей для парсинга задачи: " + csvLine);
+        if (fields.length < 8) {
+            throw new IllegalArgumentException("Недостаточно полей: " + csvLine);
         }
 
-        try {
-            int id = Integer.parseInt(fields[0]);
-            TaskType type = TaskType.valueOf(fields[1]);
-            String title = fields[2];
-            TaskStatus status = TaskStatus.valueOf(fields[3]);
-            String description = fields[4];
+        int id = Integer.parseInt(fields[0]);
+        TaskType type = TaskType.valueOf(fields[1]);
+        String name = fields[2];
+        TaskStatus status = TaskStatus.valueOf(fields[3]);
+        String description = fields[4];
+        String epicIdRaw = fields[5];
+        String startTimeRaw = fields[6];
+        String durationRaw = fields[7];
 
-            switch (type) {
-                case TASK:
-                    return new Task(id, title, description, status);
-                case EPIC:
-                    return new Epic(id, title, description);
-                case SUBTASK:
-                    if (fields.length < 6 || fields[5].isBlank()) {
-                        throw new IllegalArgumentException("Подзадача без ID эпика: " + csvLine);
-                    }
-                    int epicId = Integer.parseInt(fields[5]);
-                    return new SubTask(id, title, description, status, epicId);
-                default:
-                    throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
+        LocalDateTime startTime = startTimeRaw.isBlank() ? null : LocalDateTime.parse(startTimeRaw, formatter);
+        Duration duration = durationRaw.isBlank() ? null : Duration.ofMinutes(Long.parseLong(durationRaw));
+
+        switch (type) {
+            case TASK -> {
+                Task task = new Task(name, description, duration, startTime);
+                task.setId(id);
+                task.setStatus(status);
+                return task;
             }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Ошибка парсинга строки: " + csvLine, e);
+            case EPIC -> {
+                Epic epic = new Epic(name, description);
+                epic.setId(id);
+                epic.setStatus(status);
+                return epic;
+            }
+            case SUBTASK -> {
+                if (epicIdRaw.isBlank()) {
+                    throw new IllegalArgumentException("Subtask должен содержать ID эпика");
+                }
+                int epicId = Integer.parseInt(epicIdRaw);
+                SubTask sub = new SubTask(name, description, status, duration, startTime, epicId);
+                sub.setId(id);
+                return sub;
+            }
+            default -> throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
     }
 }
