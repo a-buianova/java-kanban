@@ -93,29 +93,23 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Task> getTask(int id) {
-        Task task = tasks.get(id);
-        if (task != null) {
-            historyManager.add(task);
-        }
-        return Optional.ofNullable(task);
+        Optional<Task> task = Optional.ofNullable(tasks.get(id));
+        task.ifPresent(historyManager::add);
+        return task;
     }
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        Epic epic = epics.get(id);
-        if (epic != null) {
-            historyManager.add(epic);
-        }
-        return Optional.ofNullable(epic);
+        Optional<Epic> epic = Optional.ofNullable(epics.get(id));
+        epic.ifPresent(historyManager::add);
+        return epic;
     }
 
     @Override
     public Optional<SubTask> getSubtask(int id) {
-        SubTask subtask = subtasks.get(id);
-        if (subtask != null) {
-            historyManager.add(subtask);
-        }
-        return Optional.ofNullable(subtask);
+        Optional<SubTask> subtask = Optional.ofNullable(subtasks.get(id));
+        subtask.ifPresent(historyManager::add);
+        return subtask;
     }
 
     @Override
@@ -158,23 +152,6 @@ public class InMemoryTaskManager implements TaskManager {
     public List<SubTask> getSubtasksForEpic(int epicId) {
         return subtasks.values().stream()
                 .filter(s -> s.getEpicId() == epicId)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Task> getTasksSortedByStatus() {
-        return tasks.values().stream()
-                .sorted(Comparator.comparing(Task::getStatus))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<SubTask> getSubtasksSortedByStatus(int epicId) {
-        if (!epics.containsKey(epicId)) {
-            throw new IllegalArgumentException("Эпик с ID " + epicId + " не найден.");
-        }
-        return getSubtasksForEpic(epicId).stream()
-                .sorted(Comparator.comparing(SubTask::getStatus))
                 .collect(Collectors.toList());
     }
 
@@ -239,6 +216,10 @@ public class InMemoryTaskManager implements TaskManager {
         else if (allNew) epic.setStatus(TaskStatus.NEW);
         else epic.setStatus(TaskStatus.IN_PROGRESS);
 
+        updateEpicTimeFields(epicSubtasks, epic);
+    }
+
+    private void updateEpicTimeFields(List<SubTask> epicSubtasks, Epic epic) {
         Duration totalDuration = epicSubtasks.stream()
                 .map(SubTask::getDuration)
                 .filter(Objects::nonNull)
@@ -300,10 +281,16 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private boolean isOverlapping(Task t1, Task t2) {
-        return t1.getStartTime() != null && t1.getEndTime() != null &&
-                t2.getStartTime() != null && t2.getEndTime() != null &&
-                t1.getStartTime().isBefore(t2.getEndTime()) &&
-                t2.getStartTime().isBefore(t1.getEndTime());
+        LocalDateTime start1 = t1.getStartTime();
+        LocalDateTime end1 = t1.getEndTime();
+        LocalDateTime start2 = t2.getStartTime();
+        LocalDateTime end2 = t2.getEndTime();
+
+        if (start1 == null || end1 == null || start2 == null || end2 == null) {
+            return false;
+        }
+
+        return start1.isBefore(end2) && start2.isBefore(end1);
     }
 
     private boolean hasIntersections(Task task) {

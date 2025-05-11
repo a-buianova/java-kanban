@@ -5,8 +5,12 @@ import task.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class TaskConverter {
+public class TaskConversionUtils {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public static String taskToCSV(Task task) {
@@ -79,5 +83,18 @@ public class TaskConverter {
             }
             default -> throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
+    }
+
+    static String historyToString(HistoryManager manager) {
+        return manager.getHistory().stream()
+                .map(task -> String.valueOf(task.getId()))
+                .collect(Collectors.joining(","));
+    }
+
+    static List<Integer> historyFromString(String value) {
+        if (value == null || value.isBlank()) return Collections.emptyList();
+        return Arrays.stream(value.split(","))
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
     }
 }

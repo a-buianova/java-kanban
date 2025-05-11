@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final Path filePath;
@@ -103,30 +102,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public Optional<Task> getTask(int id) {
         Optional<Task> task = super.getTask(id);
-        task.ifPresent(t -> {
-            historyManager.add(t);
-            save();
-        });
+        save();
         return task;
     }
 
     @Override
     public Optional<SubTask> getSubtask(int id) {
         Optional<SubTask> sub = super.getSubtask(id);
-        sub.ifPresent(s -> {
-            historyManager.add(s);
-            save();
-        });
+        save();
         return sub;
     }
 
     @Override
     public Optional<Epic> getEpic(int id) {
         Optional<Epic> epic = super.getEpic(id);
-        epic.ifPresent(e -> {
-            historyManager.add(e);
-            save();
-        });
+        save();
         return epic;
     }
 
@@ -136,20 +126,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             writer.newLine();
 
             for (Task task : getAllTasks()) {
-                writer.write(TaskConverter.taskToCSV(task));
+                writer.write(TaskConversionUtils.taskToCSV(task));
                 writer.newLine();
             }
             for (Epic epic : getAllEpics()) {
-                writer.write(TaskConverter.taskToCSV(epic));
+                writer.write(TaskConversionUtils.taskToCSV(epic));
                 writer.newLine();
             }
             for (SubTask sub : getAllSubTasks()) {
-                writer.write(TaskConverter.taskToCSV(sub));
+                writer.write(TaskConversionUtils.taskToCSV(sub));
                 writer.newLine();
             }
 
             writer.newLine();
-            String history = historyToString(historyManager);
+            String history = TaskConversionUtils.historyToString(historyManager);
             if (!history.isBlank()) {
                 writer.write(history);
             }
@@ -187,7 +177,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
             if (!readingHistory) {
                 try {
-                    Task task = TaskConverter.taskFromCSV(line);
+                    Task task = TaskConversionUtils.taskFromCSV(line);
                     int id = task.getId();
                     allTasks.put(id, task);
 
@@ -205,7 +195,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             } else {
                 try {
-                    historyIds = historyFromString(line);
+                    historyIds = TaskConversionUtils.historyFromString(line);
                 } catch (Exception e) {
                     throw new ManagerSaveException("Ошибка при разборе истории: " + line, e);
                 }
@@ -235,16 +225,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return manager;
     }
 
-    private static String historyToString(HistoryManager manager) {
-        return manager.getHistory().stream()
-                .map(task -> String.valueOf(task.getId()))
-                .collect(Collectors.joining(","));
-    }
-
-    private static List<Integer> historyFromString(String value) {
-        if (value == null || value.isBlank()) return Collections.emptyList();
-        return Arrays.stream(value.split(","))
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
-    }
 }
