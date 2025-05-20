@@ -92,10 +92,14 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void shouldIgnoreTasksWithoutStartTimeInPriorityList() {
-        Task noTimeTask = new Task("No time", "Desc");
-        manager.createTask(noTimeTask);
-        assertFalse(manager.getPrioritizedTasks().contains(noTimeTask));
+    void taskWithoutStartTimeShouldBeInPrioritizedList() {
+        Task task = new Task("No time", "No time", null, null);
+        task.setId(1);
+        task.setStatus(TaskStatus.NEW);
+        manager.createTask(task);
+
+        List<Task> prioritized = manager.getPrioritizedTasks();
+        assertTrue(prioritized.contains(task), "Задача без времени должна быть в приоритезированном списке.");
     }
 
     @Test
@@ -125,7 +129,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldCalculateEpicTimeFieldsCorrectly() {
         Epic updated = manager.getEpic(epic.getId()).orElseThrow();
-        assertEquals(Duration.ofMinutes(75), updated.getDuration());
+        assertEquals(Duration.ofMinutes(105), updated.getDuration());
         assertEquals(LocalDateTime.of(2025, 5, 2, 12, 0), updated.getStartTime());
         assertEquals(LocalDateTime.of(2025, 5, 2, 13, 45), updated.getEndTime());
     }
