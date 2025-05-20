@@ -1,22 +1,30 @@
 package task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Task implements Cloneable {
+public class Task {
     protected int id;
-    protected String title;
+    protected String name;
     protected String description;
     protected TaskStatus status;
 
-    public Task(int id, String title, String description, TaskStatus status) {
-        setTitle(title);
-        setDescription(description);
-        setStatus(status);
-        this.id = id;
+    protected Duration duration;
+    protected LocalDateTime startTime;
+
+    public Task(String name, String description) {
+        this.name = name;
+        this.description = description;
+        this.status = TaskStatus.NEW;
     }
 
-    public Task(String title, String description) {
-        this(0, title, description, TaskStatus.NEW);
+    public Task(String name, String description, Duration duration, LocalDateTime startTime) {
+        this.name = name;
+        this.description = description;
+        this.status = TaskStatus.NEW;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
     public int getId() {
@@ -27,26 +35,20 @@ public class Task implements Cloneable {
         this.id = id;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public String getTitle() {
-        return title;
+        return name;
     }
 
     public void setTitle(String title) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Заголовок не может быть пустым или null.");
-        }
-        this.title = title;
+        this.name = title;
     }
 
     public String getDescription() {
         return description;
-    }
-
-    public void setDescription(String description) {
-        if (description == null) {
-            throw new IllegalArgumentException("Описание не может быть null.");
-        }
-        this.description = description;
     }
 
     public TaskStatus getStatus() {
@@ -54,10 +56,29 @@ public class Task implements Cloneable {
     }
 
     public void setStatus(TaskStatus status) {
-        if (status == null) {
-            throw new IllegalArgumentException("Статус задачи не может быть null.");
-        }
         this.status = status;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return (startTime != null && duration != null)
+                ? startTime.plus(duration)
+                : null;
     }
 
     public TaskType getType() {
@@ -65,37 +86,32 @@ public class Task implements Cloneable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Task)) return false;
-        Task task = (Task) o;
-        return id == task.id &&
-                Objects.equals(title, task.title) &&
-                Objects.equals(description, task.description) &&
-                status == task.status;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, title, description, status);
-    }
-
-    @Override
     public String toString() {
         return "Task{" +
                 "id=" + id +
-                ", title='" + title + '\'' +
+                ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", startTime=" + startTime +
+                ", duration=" + (duration != null ? duration.toMinutes() + "m" : "null") +
+                ", endTime=" + getEndTime() +
                 '}';
     }
 
     @Override
-    public Task clone() {
-        try {
-            return (Task) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError("Клонирование не поддерживается", e);
-        }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Task task)) return false;
+        return id == task.id &&
+                Objects.equals(name, task.name) &&
+                Objects.equals(description, task.description) &&
+                status == task.status &&
+                Objects.equals(duration, task.duration) &&
+                Objects.equals(startTime, task.startTime);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, status, duration, startTime);
     }
 }

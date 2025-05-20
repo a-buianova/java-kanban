@@ -2,15 +2,13 @@ package manager;
 
 import task.Task;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-/**
- * Изменения согласно ревью:
- * - Убран параметризованный тип у внутреннего класса Node.
- * - Исправлена логика удаления из истории: сначала вызывается removeNode(node), затем nodeMap.remove(id).
- * - Добавлена проверка на дублирующийся id в nodeMap.
- * - Поддерживается корректный порядок истории и повторное добавление задач.
- */
 public class InMemoryHistoryManager implements HistoryManager {
     private final Map<Integer, Node> nodeMap = new HashMap<>();
     private Node head;
@@ -22,7 +20,9 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         if (nodeMap.containsKey(task.getId())) {
             removeNode(nodeMap.get(task.getId()));
+            nodeMap.remove(task.getId());
         }
+
         linkLast(task);
     }
 
@@ -37,13 +37,9 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public List<Task> getHistory() {
-        List<Task> history = new ArrayList<>();
-        Node current = head;
-        while (current != null) {
-            history.add(current.data);
-            current = current.next;
-        }
-        return history;
+        return Stream.iterate(head, Objects::nonNull, node -> node.next)
+                .map(node -> node.data)
+                .collect(Collectors.toList());
     }
 
     private void linkLast(Task task) {

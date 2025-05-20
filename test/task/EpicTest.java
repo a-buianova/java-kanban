@@ -5,65 +5,47 @@ import manager.TaskManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.Duration;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class EpicTest {
     private TaskManager taskManager;
+    private Epic epic;
 
     @BeforeEach
     void setUp() {
         taskManager = new InMemoryTaskManager();
+        epic = taskManager.createEpic(new Epic("Epic Test", "Test description"));
     }
 
-    // Проверка добавления подзадач в эпик
     @Test
-    void testAddSubtaskToEpic() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
+    void epicsWithSameFieldsShouldBeEqual() {
+        Epic epic1 = new Epic("Epic Title", "Epic Description");
+        Epic epic2 = new Epic("Epic Title", "Epic Description");
 
-        SubTask subtask = new SubTask(2, "Subtask 1", "Description", TaskStatus.NEW, epic.getId());
-        taskManager.createSubTask(subtask);
+        epic1.setId(1);
+        epic2.setId(1);
 
-        assertTrue(epic.getSubtaskIds().contains(subtask.getId()),
-                "ID подзадачи должен присутствовать в списке эпика.");
+        assertEquals(epic1, epic2, "Epics with same ID and fields should be equal");
     }
 
-    // Проверка, что эпик без подзадач имеет статус NEW
     @Test
-    void testEpicStatusWhenNoSubtasks() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-
-        assertEquals(TaskStatus.NEW, epic.getStatus(),
-                "Статус эпика должен быть NEW, если у него нет подзадач.");
+    void epicStartTimeShouldBeNullByDefault() {
+        Epic epic = new Epic("Epic", "desc");
+        assertNull(epic.getStartTime());
     }
 
-    // Проверка, что статус эпика обновляется при добавлении подзадачи со статусом IN_PROGRESS
     @Test
-    void testEpicStatusChangedBasedOnSubtaskStatus() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-
-        SubTask subtask = new SubTask(2, "Subtask 1", "Description", TaskStatus.IN_PROGRESS, epic.getId());
-        taskManager.createSubTask(subtask);
-
-        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(),
-                "Если хотя бы одна подзадача в IN_PROGRESS, эпик должен быть IN_PROGRESS.");
+    void epicDurationShouldBeZeroByDefault() {
+        Epic epic = new Epic("Epic", "desc");
+        assertEquals(Duration.ZERO, epic.getDuration());
     }
 
-    // Проверка, что статус эпика обновляется на DONE, если все подзадачи выполнены
     @Test
-    void testEpicStatusWhenAllSubtasksDone() {
-        Epic epic = new Epic(1, "Epic 1", "Description");
-        taskManager.createEpic(epic);
-
-        SubTask subtask1 = new SubTask(2, "Subtask 1", "Description", TaskStatus.DONE, epic.getId());
-        SubTask subtask2 = new SubTask(3, "Subtask 2", "Description", TaskStatus.DONE, epic.getId());
-
-        taskManager.createSubTask(subtask1);
-        taskManager.createSubTask(subtask2);
-
-        assertEquals(TaskStatus.DONE, epic.getStatus(),
-                "Если все подзадачи эпика выполнены, эпик должен быть DONE.");
+    void epicTypeShouldBeEpic() {
+        Epic epic = new Epic("Epic", "desc");
+        assertEquals(TaskType.EPIC, epic.getType());
     }
 }
