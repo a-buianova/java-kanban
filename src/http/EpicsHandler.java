@@ -2,30 +2,29 @@ package http;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import config.BaseHttpHandler;
 import config.GsonFactory;
 import manager.TaskManager;
 import task.Epic;
+import task.SubTask;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager manager;
+public class EpicsHandler extends BaseHttpHandler {
     private final Gson gson = GsonFactory.createGson();
 
     public EpicsHandler(TaskManager manager) {
-        this.manager = manager;
+        super(manager);
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
             String method = exchange.getRequestMethod();
-            String path = exchange.getRequestURI().getPath(); // e.g., /epics or /epics/123
+            String path = exchange.getRequestURI().getPath();
             String[] segments = path.split("/");
 
             if ("GET".equals(method)) {
@@ -33,9 +32,34 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
                     // GET /epics/{id}
                     try {
                         int id = Integer.parseInt(segments[2]);
-                        var epicOpt = manager.getEpic(id);
-                        if (epicOpt.isPresent()) {
-                            sendText(exchange, gson.toJson(epicOpt.get()), 200);
+                        manager.getEpic(id)
+                                .map(epic -> {
+                                    try {
+                                        sendText(exchange, gson.toJson(epic), 200);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    return null;
+                                })
+                                .orElseGet(() -> {
+                                    try {
+                                        sendNotFound(exchange);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    return null;
+                                });
+                    } catch (NumberFormatException e) {
+                        sendBadRequest(exchange, "Invalid epic ID");
+                    }
+                    return;
+                } else if (segments.length == 4 && "subtasks".equals(segments[3])) {
+                    // GET /epics/{id}/subtasks
+                    try {
+                        int epicId = Integer.parseInt(segments[2]);
+                        if (manager.containsEpic(epicId)) {
+                            List<SubTask> subtasks = manager.getSubtasksForEpic(epicId);
+                            sendText(exchange, gson.toJson(subtasks), 200);
                         } else {
                             sendNotFound(exchange);
                         }
@@ -63,7 +87,7 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
                 }
 
                 if (epic.getId() != 0) {
-                    if (manager.getEpic(epic.getId()).isPresent()) {
+                    if (manager.containsEpic(epic.getId())) {
                         manager.updateEpic(epic);
                         sendText(exchange, "Epic updated", 200);
                     } else {
@@ -77,8 +101,24 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
             }
 
             if ("DELETE".equals(method)) {
-                manager.deleteAllEpics();
-                sendText(exchange, "All epics deleted", 200);
+                if (segments.length == 3) {
+                    // DELETE /epics/{id}
+                    try {
+                        int id = Integer.parseInt(segments[2]);
+                        if (manager.containsEpic(id)) {
+                            manager.deleteEpic(id);
+                            sendText(exchange, "Epic deleted", 200);
+                        } else {
+                            sendNotFound(exchange);
+                        }
+                    } catch (NumberFormatException e) {
+                        sendBadRequest(exchange, "Invalid epic ID");
+                    }
+                } else {
+                    // DELETE /epics
+                    manager.deleteAllEpics();
+                    sendText(exchange, "All epics deleted", 200);
+                }
                 return;
             }
 

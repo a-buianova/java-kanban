@@ -34,18 +34,20 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task createTask(Task task) {
-        if (task == null) {
-            throw new IllegalArgumentException("Task не может быть null.");
+        if (task == null || task.getName() == null || task.getName().isBlank()
+                || task.getDescription() == null || task.getDescription().isBlank()
+                || task.getDuration() == null || task.getDuration().isNegative()) {
+            throw new IllegalArgumentException("Некорректные данные задачи.");
         }
-
         task.setId(nextId++);
         if (hasIntersections(task)) {
             throw new IllegalArgumentException("Задача пересекается по времени с другой задачей.");
         }
         tasks.put(task.getId(), task);
-        prioritizedTasks.add(task); // всегда добавляем
+        prioritizedTasks.add(task);
         return task;
     }
+
 
     @Override
     public Epic createEpic(Epic epic) {
@@ -256,12 +258,17 @@ public class InMemoryTaskManager implements TaskManager {
         if (!tasks.containsKey(task.getId())) {
             throw new IllegalArgumentException("Задача с ID " + task.getId() + " не найдена.");
         }
+        if (task.getName() == null || task.getName().isBlank()
+                || task.getDescription() == null || task.getDescription().isBlank()
+                || task.getDuration() == null || task.getDuration().isNegative()) {
+            throw new IllegalArgumentException("Некорректные данные задачи.");
+        }
         if (hasIntersections(task)) {
             throw new IllegalArgumentException("Задача пересекается по времени с другой задачей.");
         }
         tasks.put(task.getId(), task);
         prioritizedTasks.removeIf(t -> t.getId() == task.getId());
-        prioritizedTasks.add(task); // всегда добавляем
+        prioritizedTasks.add(task);
         return task;
     }
 
@@ -292,5 +299,20 @@ public class InMemoryTaskManager implements TaskManager {
         return prioritizedTasks.stream()
                 .filter(t -> t.getId() != task.getId())
                 .anyMatch(t -> isOverlapping(t, task));
+    }
+
+    @Override
+    public boolean containsEpic(int id) {
+        return epics.containsKey(id);
+    }
+
+    @Override
+    public boolean containsTask(int id) {
+        return tasks.containsKey(id);
+    }
+
+    @Override
+    public boolean containsSubtask(int id) {
+        return subtasks.containsKey(id);
     }
 }

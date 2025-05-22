@@ -93,13 +93,11 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void taskWithoutStartTimeShouldBeInPrioritizedList() {
-        Task task = new Task("No time", "No time", null, null);
-        task.setId(1);
-        task.setStatus(TaskStatus.NEW);
-        manager.createTask(task);
+        Task task = new Task("Task without time", "desc", Duration.ofMinutes(15), null);
+        Task created = manager.createTask(task);
 
-        List<Task> prioritized = manager.getPrioritizedTasks();
-        assertTrue(prioritized.contains(task), "Задача без времени должна быть в приоритезированном списке.");
+        assertTrue(manager.getPrioritizedTasks().contains(created),
+                "Задача без startTime должна корректно попадать в приоритезированный список");
     }
 
     @Test

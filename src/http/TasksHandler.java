@@ -2,7 +2,6 @@ package http;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import config.BaseHttpHandler;
 import config.GsonFactory;
 import manager.TaskManager;
@@ -12,14 +11,12 @@ import task.TaskType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
-public class TasksHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager manager;
+public class TasksHandler extends BaseHttpHandler {
     private final Gson gson = GsonFactory.createGson();
 
     public TasksHandler(TaskManager manager) {
-        this.manager = manager;
+        super(manager);
     }
 
     @Override
@@ -31,31 +28,23 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
 
             if ("GET".equals(method)) {
                 if (segments.length == 3 && "prioritized".equals(segments[2])) {
-                    // GET /tasks/prioritized
-                    String json = gson.toJson(manager.getPrioritizedTasks());
-                    sendText(exchange, json, 200);
+                    sendText(exchange, gson.toJson(manager.getPrioritizedTasks()), 200);
                     return;
                 } else if (segments.length == 3) {
-                    // GET /tasks/{id}
                     try {
                         int id = Integer.parseInt(segments[2]);
-                        var optional = manager.getTask(id);
-                        if (optional.isPresent()) {
-                            String json = gson.toJson(optional.get());
-                            sendText(exchange, json, 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.getTask(id)
+                                .ifPresentOrElse(
+                                        task -> sendSafely(exchange, gson.toJson(task), 200),
+                                        () -> sendSafelyNotFound(exchange)
+                                );
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid task ID format");
                     }
                     return;
                 }
 
-                // GET /tasks
-                List<Task> tasks = manager.getAllTasks();
-                String json = gson.toJson(tasks);
-                sendText(exchange, json, 200);
+                sendText(exchange, gson.toJson(manager.getAllTasks()), 200);
                 return;
             }
 
@@ -69,44 +58,69 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
                     return;
                 }
 
-                if (task.getId() != 0) {
-                    if (manager.getTask(task.getId()).isPresent()) {
-                        try {
+                try {
+                    if (task.getId() != 0) {
+                        if (manager.containsTask(task.getId())) {
                             manager.updateTask(task);
                             sendText(exchange, "Task updated", 200);
-                        } catch (IllegalArgumentException e) {
-                            sendHasIntersections(exchange, e.getMessage()); // 406
+                        } else {
+                            sendNotFound(exchange);
                         }
                     } else {
-                        sendNotFound(exchange);
+                        manager.createTask(task);
+                        sendText(exchange, "Task created", 201);
                     }
-                } else {
-                    if (task.getName() == null || task.getName().isBlank()
-                            || task.getDescription() == null || task.getDescription().isBlank()
-                            || task.getStartTime() == null || task.getDuration().toMinutes() < 0) {
-                        sendConflict(exchange, "Invalid task data");
+                } catch (IllegalArgumentException e) {
+                    String msg = e.getMessage();
+                    if (msg != null && msg.contains("пересекается")) {
+                        sendHasIntersections(exchange, msg);
                     } else {
-                        try {
-                            manager.createTask(task);
-                            sendText(exchange, "Task created", 201);
-                        } catch (IllegalArgumentException e) {
-                            sendHasIntersections(exchange, e.getMessage()); // 406
-                        }
+                        sendConflict(exchange, msg);
                     }
                 }
                 return;
             }
 
             if ("DELETE".equals(method)) {
-                manager.deleteAllTasks();
-                sendText(exchange, "All tasks deleted", 200);
+                if (segments.length == 3) {
+                    try {
+                        int id = Integer.parseInt(segments[2]);
+                        if (manager.containsTask(id)) {
+                            manager.deleteTask(id);
+                            sendText(exchange, "Task deleted", 200);
+                        } else {
+                            sendNotFound(exchange);
+                        }
+                    } catch (NumberFormatException e) {
+                        sendBadRequest(exchange, "Invalid task ID");
+                    }
+                } else {
+                    manager.deleteAllTasks();
+                    sendText(exchange, "All tasks deleted", 200);
+                }
                 return;
             }
 
-            sendNotFound(exchange);
+            sendMethodNotAllowed(exchange, "Only GET, POST, DELETE are supported for /tasks");
         } catch (Exception e) {
             e.printStackTrace();
             sendServerError(exchange);
+        }
+    }
+
+    private void sendSafely(HttpExchange exchange, String text, int code) {
+        try {
+            sendText(exchange, text, code);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void sendSafelyNotFound(HttpExchange exchange) {
+        try {
+            sendNotFound(exchange);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

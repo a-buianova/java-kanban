@@ -6,11 +6,14 @@ import config.DurationAdapter;
 import config.LocalDateTimeAdapter;
 import manager.InMemoryTaskManager;
 import manager.TaskManager;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import task.Task;
 import task.TaskStatus;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -19,7 +22,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTaskServerPrioritizedTest {
 
@@ -62,13 +66,14 @@ public class HttpTaskServerPrioritizedTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        String body = response.body();
 
-        int iEarly = body.indexOf("Early");
-        int iMiddle = body.indexOf("Middle");
-        int iLate = body.indexOf("Late");
+        Type taskListType = new com.google.gson.reflect.TypeToken<List<Task>>() {}.getType();
+        List<Task> tasks = gson.fromJson(response.body(), taskListType);
 
-        assertTrue(iEarly < iMiddle && iMiddle < iLate, "Tasks should be in time order");
+        assertEquals(3, tasks.size());
+        assertEquals("Early", tasks.get(0).getName());
+        assertEquals("Middle", tasks.get(1).getName());
+        assertEquals("Late", tasks.get(2).getName());
     }
 
     @Test
@@ -88,7 +93,7 @@ public class HttpTaskServerPrioritizedTest {
     @Test
     public void shouldHandleTasksWithNullStartTime() throws IOException, InterruptedException {
         Task t1 = new Task("T1", "Has time", Duration.ofMinutes(20), LocalDateTime.now().plusHours(1));
-        Task t2 = new Task("T2", "No time", null, null);
+        Task t2 = new Task("T2", "No time", Duration.ofMinutes(10), null); // ✔ duration есть, startTime = null
         t1.setStatus(TaskStatus.NEW);
         t2.setStatus(TaskStatus.NEW);
 

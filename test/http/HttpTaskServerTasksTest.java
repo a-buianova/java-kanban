@@ -6,7 +6,9 @@ import config.DurationAdapter;
 import config.LocalDateTimeAdapter;
 import manager.InMemoryTaskManager;
 import manager.TaskManager;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import task.Task;
 import task.TaskStatus;
 
@@ -18,7 +20,8 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTaskServerTasksTest {
 
@@ -98,7 +101,11 @@ public class HttpTaskServerTasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("FindMe"));
+
+        Task returnedTask = gson.fromJson(response.body(), Task.class);
+        assertEquals(task.getTitle(), returnedTask.getTitle());
+        assertEquals(task.getDescription(), returnedTask.getDescription());
+        assertEquals(task.getStartTime(), returnedTask.getStartTime());
     }
 
     @Test
@@ -115,7 +122,10 @@ public class HttpTaskServerTasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("Read"));
+
+        Task[] tasks = gson.fromJson(response.body(), Task[].class);
+        assertEquals(1, tasks.length);
+        assertEquals("Read", tasks[0].getTitle());
     }
 
     @Test
@@ -151,15 +161,17 @@ public class HttpTaskServerTasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("One"));
-        assertTrue(response.body().contains("Two"));
-    }
 
+        Task[] prioritized = gson.fromJson(response.body(), Task[].class);
+        assertEquals(2, prioritized.length);
+        assertEquals("One", prioritized[0].getTitle());
+        assertEquals("Two", prioritized[1].getTitle());
+    }
     @Test
     public void shouldReturnHistory() throws IOException, InterruptedException {
         Task task = new Task("History", "Track", Duration.ofMinutes(30), LocalDateTime.now());
         manager.createTask(task);
-        manager.getTask(task.getId()); // добавить в историю
+        manager.getTask(task.getId());
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/history"))
@@ -170,7 +182,10 @@ public class HttpTaskServerTasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("History"));
+
+        Task[] history = gson.fromJson(response.body(), Task[].class);
+        assertEquals(1, history.length);
+        assertEquals("History", history[0].getTitle());
     }
 
     @Test

@@ -20,6 +20,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,8 +66,17 @@ public class HttpTaskServerSubtasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(201, response.statusCode());
-        assertEquals(1, manager.getAllSubTasks().size());
-        assertEquals("SubTitle", manager.getAllSubTasks().get(0).getName());
+
+        HttpRequest getRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/subtasks/" + manager.getAllSubTasks().get(0).getId()))
+                .GET()
+                .build();
+
+        HttpResponse<String> getResponse = HttpClient.newHttpClient()
+                .send(getRequest, HttpResponse.BodyHandlers.ofString());
+
+        SubTask created = gson.fromJson(getResponse.body(), SubTask.class);
+        assertEquals("SubTitle", created.getName());
     }
 
     @Test
@@ -83,7 +93,11 @@ public class HttpTaskServerSubtasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("ViewSub"));
+
+        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<List<SubTask>>() {}.getType();
+        List<SubTask> subtasks = gson.fromJson(response.body(), listType);
+        assertEquals(1, subtasks.size());
+        assertEquals("ViewSub", subtasks.get(0).getName());
     }
 
     @Test
@@ -101,7 +115,9 @@ public class HttpTaskServerSubtasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("FindMe"));
+
+        SubTask found = gson.fromJson(response.body(), SubTask.class);
+        assertEquals("FindMe", found.getName());
     }
 
     @Test
@@ -151,7 +167,7 @@ public class HttpTaskServerSubtasksTest {
         manager.createSubTask(sub2);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8080/subtasks/epic?id=" + epic.getId()))
+                .uri(URI.create("http://localhost:8080/epics/" + epic.getId() + "/subtasks")) // исправлено
                 .GET()
                 .build();
 
@@ -159,8 +175,12 @@ public class HttpTaskServerSubtasksTest {
                 .send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.body().contains("Sub1"));
-        assertTrue(response.body().contains("Sub2"));
+
+        java.lang.reflect.Type listType = new com.google.gson.reflect.TypeToken<List<SubTask>>() {}.getType();
+        List<SubTask> subtasks = gson.fromJson(response.body(), listType);
+        assertEquals(2, subtasks.size());
+        assertTrue(subtasks.stream().anyMatch(s -> s.getName().equals("Sub1")));
+        assertTrue(subtasks.stream().anyMatch(s -> s.getName().equals("Sub2")));
     }
 
     @Test
@@ -227,7 +247,7 @@ public class HttpTaskServerSubtasksTest {
         Epic emptyEpic = manager.createEpic(new Epic("NoSubtasks", "Empty"));
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8080/subtasks/epic?id=" + emptyEpic.getId()))
+                .uri(URI.create("http://localhost:8080/epics/" + emptyEpic.getId() + "/subtasks")) // исправлено
                 .GET()
                 .build();
 
