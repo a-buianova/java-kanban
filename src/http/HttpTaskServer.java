@@ -1,8 +1,8 @@
 package http;
 
 import com.sun.net.httpserver.HttpServer;
-import manager.TaskManager;
 import manager.Managers;
+import manager.TaskManager;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,7 +16,8 @@ public class HttpTaskServer {
         server = HttpServer.create(new InetSocketAddress(8080), 0);
 
         server.createContext("/tasks", new TasksHandler(manager));
-        server.createContext("/epics", new EpicsHandler(manager));
+        server.createContext("/epics",
+                new EpicsHandler(manager));
         server.createContext("/subtasks", new SubtasksHandler(manager));
         server.createContext("/history", new HistoryHandler(manager));
         server.createContext("/prioritized", new PrioritizedHandler(manager));

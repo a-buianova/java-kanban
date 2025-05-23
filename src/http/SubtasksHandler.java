@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import config.BaseHttpHandler;
 import config.GsonFactory;
+import exception.TaskIntersectionException;
 import manager.TaskManager;
 import task.SubTask;
 
@@ -31,12 +32,24 @@ public class SubtasksHandler extends BaseHttpHandler {
                     // GET /subtasks/{id}
                     try {
                         int id = Integer.parseInt(segments[2]);
-                        var optional = manager.getSubtask(id);
-                        if (optional.isPresent()) {
-                            sendText(exchange, gson.toJson(optional.get()), 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.getSubtask(id)
+                                .map(gson::toJson)
+                                .ifPresentOrElse(
+                                        json -> {
+                                            try {
+                                                sendText(exchange, json, 200);
+                                            } catch (IOException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        },
+                                        () -> {
+                                            try {
+                                                sendNotFound(exchange);
+                                            } catch (IOException e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+                                );
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid subtask ID");
                     }
@@ -64,23 +77,16 @@ public class SubtasksHandler extends BaseHttpHandler {
 
                 try {
                     if (subtask.getId() != 0) {
-                        if (manager.containsSubtask(subtask.getId())) {
-                            manager.updateSubTask(subtask);
-                            sendText(exchange, "Subtask updated", 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.updateSubTask(subtask);
+                        sendText(exchange, "Subtask updated", 200);
                     } else {
                         manager.createSubTask(subtask);
                         sendText(exchange, "Subtask created", 201);
                     }
+                } catch (TaskIntersectionException e) {
+                    sendHasIntersections(exchange, e.getMessage());
                 } catch (IllegalArgumentException e) {
-                    String msg = e.getMessage();
-                    if (msg != null && msg.contains("пересекается")) {
-                        sendHasIntersections(exchange, msg);
-                    } else {
-                        sendConflict(exchange, msg);
-                    }
+                    sendConflict(exchange, e.getMessage());
                 }
                 return;
             }
@@ -90,12 +96,8 @@ public class SubtasksHandler extends BaseHttpHandler {
                     // DELETE /subtasks/{id}
                     try {
                         int id = Integer.parseInt(segments[2]);
-                        if (manager.containsSubtask(id)) {
-                            manager.deleteSubtask(id);
-                            sendText(exchange, "Subtask deleted", 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.deleteSubtask(id);
+                        sendText(exchange, "Subtask deleted (if existed)", 200);
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid subtask ID");
                     }

@@ -60,16 +60,13 @@ public class HttpTaskServerEpicsTest {
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(201, response.statusCode());
-
-        List<Epic> epics = manager.getAllEpics();
-        assertEquals(1, epics.size());
-        assertEquals("EpicTitle", epics.get(0).getName());
+        assertEquals(1, manager.getAllEpics().size());
+        assertEquals("EpicTitle", manager.getAllEpics().get(0).getName());
     }
 
     @Test
     public void shouldReturnAllEpicsViaGet() throws IOException, InterruptedException {
-        Epic epic = new Epic("GetEpic", "Desc");
-        manager.createEpic(epic);
+        Epic epic = manager.createEpic(new Epic("GetEpic", "Desc"));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/epics"))
@@ -78,16 +75,15 @@ public class HttpTaskServerEpicsTest {
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
-        List<Epic> epics = gson.fromJson(response.body(), new TypeToken<List<Epic>>() {}.getType());
         assertEquals(200, response.statusCode());
+        List<Epic> epics = gson.fromJson(response.body(), new TypeToken<List<Epic>>() {}.getType());
         assertEquals(1, epics.size());
         assertEquals("GetEpic", epics.get(0).getName());
     }
 
     @Test
     public void shouldReturnEpicById() throws IOException, InterruptedException {
-        Epic epic = new Epic("ById", "Desc");
-        manager.createEpic(epic);
+        Epic epic = manager.createEpic(new Epic("ById", "Desc"));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/epics/" + epic.getId()))
@@ -95,19 +91,19 @@ public class HttpTaskServerEpicsTest {
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode());
 
         Epic result = gson.fromJson(response.body(), Epic.class);
-        assertEquals(200, response.statusCode());
-        assertEquals("ById", result.getName());
+        assertEquals(epic.getName(), result.getName());
     }
 
     @Test
     public void shouldUpdateEpic() throws IOException, InterruptedException {
-        Epic epic = new Epic("OldTitle", "OldDesc");
-        manager.createEpic(epic);
+        Epic epic = manager.createEpic(new Epic("OldTitle", "OldDesc"));
         epic.setTitle("NewTitle");
 
         String json = gson.toJson(epic);
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/epics"))
                 .header("Content-Type", "application/json")
@@ -115,16 +111,13 @@ public class HttpTaskServerEpicsTest {
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
-        Epic updated = manager.getEpic(epic.getId()).orElseThrow();
         assertEquals(200, response.statusCode());
-        assertEquals("NewTitle", updated.getName());
+        assertEquals("NewTitle", manager.getEpic(epic.getId()).orElseThrow().getName());
     }
 
     @Test
     public void shouldDeleteAllEpics() throws IOException, InterruptedException {
-        Epic epic = new Epic("ToDelete", "Desc");
-        manager.createEpic(epic);
+        manager.createEpic(new Epic("ToDelete", "Desc"));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:8080/epics"))
@@ -132,7 +125,6 @@ public class HttpTaskServerEpicsTest {
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
         assertEquals(200, response.statusCode());
         assertTrue(manager.getAllEpics().isEmpty());
     }
@@ -148,13 +140,12 @@ public class HttpTaskServerEpicsTest {
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
         assertEquals(409, response.statusCode());
     }
 
     @Test
     public void shouldReturn404WhenUpdatingNonexistentEpic() throws IOException, InterruptedException {
-        Epic epic = new Epic("Nonexistent", "Not exists");
+        Epic epic = new Epic("Nonexistent", "Desc");
         epic.setId(9999);
         String json = gson.toJson(epic);
 
@@ -165,13 +156,11 @@ public class HttpTaskServerEpicsTest {
                 .build();
 
         HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
         assertEquals(404, response.statusCode());
     }
 
     @Test
     public void shouldReturnSubtasksForEpicById() throws IOException, InterruptedException {
-        // Создаём эпик и 2 подзадачи к нему
         Epic epic = manager.createEpic(new Epic("Epic with subtasks", "desc"));
 
         SubTask sub1 = new SubTask("Sub1", "desc1", Duration.ofMinutes(15),
@@ -187,11 +176,10 @@ public class HttpTaskServerEpicsTest {
                 .GET()
                 .build();
 
-        HttpResponse<String> response = HttpClient.newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, response.statusCode());
 
-        assertEquals(200, response.statusCode(), "Should return 200 for valid epic ID");
-        assertTrue(response.body().contains("Sub1"), "Response should contain Sub1");
-        assertTrue(response.body().contains("Sub2"), "Response should contain Sub2");
+        List<SubTask> subtasks = gson.fromJson(response.body(), new TypeToken<List<SubTask>>() {}.getType());
+        assertEquals(2, subtasks.size());
     }
 }

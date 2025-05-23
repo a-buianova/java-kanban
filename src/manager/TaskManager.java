@@ -50,11 +50,4 @@ public interface TaskManager {
     List<Task> getHistory();
 
     List<Task> getPrioritizedTasks();
-
-    boolean containsEpic(int id);
-
-    boolean containsTask(int id);
-
-    boolean containsSubtask(int id);
-
 }

@@ -1,5 +1,6 @@
 package manager;
 
+import exception.TaskIntersectionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
@@ -80,7 +81,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task overlapping = new Task("Overlap", "Desc", Duration.ofMinutes(30),
                 LocalDateTime.of(2025, 5, 2, 10, 30)); // пересекается с baseTask
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> isolatedManager.createTask(overlapping));
+        TaskIntersectionException ex = assertThrows(
+                TaskIntersectionException.class,
+                () -> isolatedManager.createTask(overlapping)
+        );
 
         assertTrue(ex.getMessage().contains("пересекается"));
     }

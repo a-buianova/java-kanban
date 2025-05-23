@@ -16,7 +16,7 @@ import java.util.List;
 public class EpicsHandler extends BaseHttpHandler {
     private final Gson gson = GsonFactory.createGson();
 
-    public EpicsHandler(TaskManager manager) {
+    public EpicsHandler(TaskManager manager) { // ✅ без указания пакета
         super(manager);
     }
 
@@ -57,12 +57,8 @@ public class EpicsHandler extends BaseHttpHandler {
                     // GET /epics/{id}/subtasks
                     try {
                         int epicId = Integer.parseInt(segments[2]);
-                        if (manager.containsEpic(epicId)) {
-                            List<SubTask> subtasks = manager.getSubtasksForEpic(epicId);
-                            sendText(exchange, gson.toJson(subtasks), 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        List<SubTask> subtasks = manager.getSubtasksForEpic(epicId);
+                        sendText(exchange, gson.toJson(subtasks), 200);
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid epic ID");
                     }
@@ -86,16 +82,16 @@ public class EpicsHandler extends BaseHttpHandler {
                     return;
                 }
 
-                if (epic.getId() != 0) {
-                    if (manager.containsEpic(epic.getId())) {
+                try {
+                    if (epic.getId() != 0) {
                         manager.updateEpic(epic);
                         sendText(exchange, "Epic updated", 200);
                     } else {
-                        sendNotFound(exchange);
+                        manager.createEpic(epic);
+                        sendText(exchange, "Epic created", 201);
                     }
-                } else {
-                    manager.createEpic(epic);
-                    sendText(exchange, "Epic created", 201);
+                } catch (IllegalArgumentException e) {
+                    sendNotFound(exchange);
                 }
                 return;
             }
@@ -105,12 +101,8 @@ public class EpicsHandler extends BaseHttpHandler {
                     // DELETE /epics/{id}
                     try {
                         int id = Integer.parseInt(segments[2]);
-                        if (manager.containsEpic(id)) {
-                            manager.deleteEpic(id);
-                            sendText(exchange, "Epic deleted", 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.deleteEpic(id);
+                        sendText(exchange, "Epic deleted", 200);
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid epic ID");
                     }

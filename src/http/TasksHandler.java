@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import config.BaseHttpHandler;
 import config.GsonFactory;
+import exception.TaskIntersectionException;
 import manager.TaskManager;
 import task.Task;
 import task.TaskType;
@@ -34,10 +35,14 @@ public class TasksHandler extends BaseHttpHandler {
                     try {
                         int id = Integer.parseInt(segments[2]);
                         manager.getTask(id)
-                                .ifPresentOrElse(
-                                        task -> sendSafely(exchange, gson.toJson(task), 200),
-                                        () -> sendSafelyNotFound(exchange)
-                                );
+                                .map(task -> {
+                                    sendSafely(exchange, gson.toJson(task), 200);
+                                    return null;
+                                })
+                                .orElseGet(() -> {
+                                    sendSafelyNotFound(exchange);
+                                    return null;
+                                });
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid task ID format");
                     }
@@ -60,23 +65,16 @@ public class TasksHandler extends BaseHttpHandler {
 
                 try {
                     if (task.getId() != 0) {
-                        if (manager.containsTask(task.getId())) {
-                            manager.updateTask(task);
-                            sendText(exchange, "Task updated", 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.updateTask(task);
+                        sendText(exchange, "Task updated", 200);
                     } else {
                         manager.createTask(task);
                         sendText(exchange, "Task created", 201);
                     }
+                } catch (TaskIntersectionException e) {
+                    sendHasIntersections(exchange, e.getMessage());
                 } catch (IllegalArgumentException e) {
-                    String msg = e.getMessage();
-                    if (msg != null && msg.contains("пересекается")) {
-                        sendHasIntersections(exchange, msg);
-                    } else {
-                        sendConflict(exchange, msg);
-                    }
+                    sendConflict(exchange, e.getMessage());
                 }
                 return;
             }
@@ -85,12 +83,8 @@ public class TasksHandler extends BaseHttpHandler {
                 if (segments.length == 3) {
                     try {
                         int id = Integer.parseInt(segments[2]);
-                        if (manager.containsTask(id)) {
-                            manager.deleteTask(id);
-                            sendText(exchange, "Task deleted", 200);
-                        } else {
-                            sendNotFound(exchange);
-                        }
+                        manager.deleteTask(id);
+                        sendText(exchange, "Task deleted", 200);
                     } catch (NumberFormatException e) {
                         sendBadRequest(exchange, "Invalid task ID");
                     }

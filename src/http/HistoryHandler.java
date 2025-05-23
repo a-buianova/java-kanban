@@ -2,13 +2,14 @@ package http;
 
 import com.sun.net.httpserver.HttpExchange;
 import config.BaseHttpHandler;
+import manager.TaskManager;
 import task.Task;
 
 import java.io.IOException;
 import java.util.List;
 
 public class HistoryHandler extends BaseHttpHandler {
-    public HistoryHandler(manager.TaskManager manager) {
+    public HistoryHandler(TaskManager manager) {
         super(manager);
     }
 
