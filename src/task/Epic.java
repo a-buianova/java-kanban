@@ -5,13 +5,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Epic extends task.Task {
-    private Duration duration = Duration.ZERO;     // [ТЗ-1]
-    private LocalDateTime endTime;                 // [ТЗ-1]
-    private final List<Integer> subtaskIds = new ArrayList<>(); // [ТЗ-2] храним id подзадач
+public class Epic extends Task {
+
+    private final List<Integer> subtaskIds = new ArrayList<>();
 
     public Epic(String name, String description) {
         super(name, description);
+        this.duration = Duration.ZERO;
+        this.startTime = null;
     }
 
     @Override
@@ -19,22 +20,25 @@ public class Epic extends task.Task {
         return TaskType.EPIC;
     }
 
+    // Можно рассчитывать duration по подзадачам в менеджере (в getDuration)
     @Override
     public Duration getDuration() {
-        return duration;
-    }
-
-    @Override
-    public LocalDateTime getEndTime() {
-        return endTime;
+        return duration; // из родительского класса
     }
 
     public void setDuration(Duration duration) {
         this.duration = duration;
     }
 
+    @Override
+    public LocalDateTime getEndTime() {
+        return (startTime != null && duration != null) ? startTime.plus(duration) : null;
+    }
+
     public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
+        if (startTime != null && endTime != null) {
+            this.duration = Duration.between(startTime, endTime);
+        }
     }
 
     public List<Integer> getSubtaskIds() {
@@ -48,10 +52,9 @@ public class Epic extends task.Task {
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
-                // 👇 [ТЗ-1] расчетные поля
                 ", startTime=" + startTime +
                 ", duration=" + (duration != null ? duration.toMinutes() + "m" : "null") +
-                ", endTime=" + endTime +
+                ", endTime=" + getEndTime() +
                 '}';
     }
 }

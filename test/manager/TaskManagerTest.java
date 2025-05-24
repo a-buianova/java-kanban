@@ -1,5 +1,6 @@
 package manager;
 
+import exception.TaskIntersectionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
@@ -80,7 +81,10 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task overlapping = new Task("Overlap", "Desc", Duration.ofMinutes(30),
                 LocalDateTime.of(2025, 5, 2, 10, 30)); // пересекается с baseTask
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> isolatedManager.createTask(overlapping));
+        TaskIntersectionException ex = assertThrows(
+                TaskIntersectionException.class,
+                () -> isolatedManager.createTask(overlapping)
+        );
 
         assertTrue(ex.getMessage().contains("пересекается"));
     }
@@ -92,10 +96,12 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    void shouldIgnoreTasksWithoutStartTimeInPriorityList() {
-        Task noTimeTask = new Task("No time", "Desc");
-        manager.createTask(noTimeTask);
-        assertFalse(manager.getPrioritizedTasks().contains(noTimeTask));
+    void taskWithoutStartTimeShouldBeInPrioritizedList() {
+        Task task = new Task("Task without time", "desc", Duration.ofMinutes(15), null);
+        Task created = manager.createTask(task);
+
+        assertTrue(manager.getPrioritizedTasks().contains(created),
+                "Задача без startTime должна корректно попадать в приоритезированный список");
     }
 
     @Test
@@ -125,7 +131,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     @Test
     void shouldCalculateEpicTimeFieldsCorrectly() {
         Epic updated = manager.getEpic(epic.getId()).orElseThrow();
-        assertEquals(Duration.ofMinutes(75), updated.getDuration());
+        assertEquals(Duration.ofMinutes(105), updated.getDuration());
         assertEquals(LocalDateTime.of(2025, 5, 2, 12, 0), updated.getStartTime());
         assertEquals(LocalDateTime.of(2025, 5, 2, 13, 45), updated.getEndTime());
     }

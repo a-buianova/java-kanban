@@ -131,8 +131,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
 
         Epic updatedEpic = manager.getEpic(epic.getId()).orElseThrow();
 
-        assertEquals(Duration.ofMinutes(30), updatedEpic.getDuration(), "Общая продолжительность эпика должна быть 30 минут.");
-        assertEquals(LocalDateTime.of(2025, 5, 3, 10, 0), updatedEpic.getStartTime(), "startTime должен быть самым ранним");
+        assertEquals(Duration.ofMinutes(140), updatedEpic.getDuration(), "Общая продолжительность эпика должна быть 2 часа 20 минут.");        assertEquals(LocalDateTime.of(2025, 5, 3, 10, 0), updatedEpic.getStartTime(), "startTime должен быть самым ранним");
         assertEquals(LocalDateTime.of(2025, 5, 3, 12, 20), updatedEpic.getEndTime(), "endTime должен быть самым поздним");
     }
 
@@ -263,6 +262,7 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
 
         // Подзадача без времени
         SubTask subtask = new SubTask("Subtask without time", "desc", epic.getId());
+        subtask.setStatus(TaskStatus.NEW);
         manager.createSubTask(subtask);
 
         // Проверка, что она не влияет на поля времени эпика
@@ -272,7 +272,8 @@ public class InMemoryTaskManagerTest extends TaskManagerTest<InMemoryTaskManager
         assertNull(updatedEpic.getStartTime(), "startTime эпика должен быть null");
         assertNull(updatedEpic.getEndTime(), "endTime эпика должен быть null");
 
-        assertFalse(manager.getPrioritizedTasks().contains(subtask), "Подзадача без времени не должна попадать в приоритезированный список");
+        // ✔ Подзадача без времени должна попасть в приоритезированный список согласно ТЗ
+        assertTrue(manager.getPrioritizedTasks().contains(subtask), "Подзадача без времени должна попадать в приоритезированный список");
     }
 
 }

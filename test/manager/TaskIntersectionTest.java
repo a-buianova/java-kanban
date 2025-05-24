@@ -1,5 +1,6 @@
 package manager;
 
+import exception.TaskIntersectionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
@@ -30,11 +31,13 @@ class TaskIntersectionTest {
         Task task2 = new Task("Task 2", "Description",
                 Duration.ofMinutes(60), LocalDateTime.of(2025, 5, 4, 10, 30));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> taskManager.createTask(task2));
+        TaskIntersectionException exception = assertThrows(
+                TaskIntersectionException.class,
+                () -> taskManager.createTask(task2)
+        );
 
         assertEquals("Задача пересекается по времени с другой задачей.", exception.getMessage());
     }
-
     @Test
     void shouldAllowNonOverlappingTasks() {
         Task task1 = new Task("Morning task", "Desc",
@@ -61,7 +64,10 @@ class TaskIntersectionTest {
         // Попробуем обновить task2 так, чтобы он пересекался с task1
         task2.setStartTime(LocalDateTime.of(2025, 5, 4, 10, 30));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> taskManager.updateTask(task2));
+        TaskIntersectionException exception = assertThrows(
+                TaskIntersectionException.class,
+                () -> taskManager.updateTask(task2)
+        );
 
         assertEquals("Задача пересекается по времени с другой задачей.", exception.getMessage());
     }
@@ -77,7 +83,10 @@ class TaskIntersectionTest {
         SubTask sub2 = new SubTask("Sub2", "Desc",
                 Duration.ofMinutes(30), LocalDateTime.of(2025, 5, 4, 9, 15), epic.getId());
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> taskManager.createSubTask(sub2));
+        TaskIntersectionException exception = assertThrows(
+                TaskIntersectionException.class,
+                () -> taskManager.createSubTask(sub2)
+        );
 
         assertEquals("Подзадача пересекается по времени с другой задачей.", exception.getMessage());
     }
